@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
+import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
@@ -12,6 +13,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.LiveDataScope
+import androidx.lifecycle.MutableLiveData
 import com.example.myfittracker.MyApplication
 import com.yucheng.ycbtsdk.Bean.ScanDeviceBean
 import com.yucheng.ycbtsdk.Response.BleScanResponse
@@ -24,19 +29,25 @@ import kotlinx.coroutines.launch
 class BleService : Service(){
 
     private var isEnabled = false
+    private val scannedDevices = MutableLiveData<List<ScanDeviceBean>>()
+    private val currentDevices = mutableListOf<ScanDeviceBean>()
+
+    private val binder = LocalBinder()
+
+    inner class LocalBinder : Binder() {
+        fun getService(): BleService = this@BleService
+    }
 
     override fun onBind(intent: Intent?): IBinder? {
-        TODO("Not yet implemented")
+        Log.i("BleService", "Service bound")
+        return binder
     }
 
     override fun onCreate() {
         super.onCreate()
-
         val bluetoothAdapter = (applicationContext as MyApplication).bluetoothAdapter
         isEnabled = bluetoothAdapter.isEnabled
-
-
-
+        Log.i("BleService", "Service created, Bluetooth is enabled: $isEnabled")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -48,25 +59,49 @@ class BleService : Service(){
 
 
     private fun startScan(){
-        if(isEnabled){
-            YCBTClient.startScanBle(object : BleScanResponse {
-                override fun onScanResponse(code: Int, scanDeviceBean: ScanDeviceBean?) {
-                    scanDeviceBean?.let { // Use safe call operator and let block
-                        val deviceName = it.deviceName
-                        val deviceMac = it.deviceMac
-                        Log.i("ScanCallback", "Device Name: $deviceName")
-                        Log.i("ScanCallback", "Device Address: $deviceMac")
-//
-                    } ?: run {
-                        Log.e("ScanCallback", "ScanDeviceBean is null for code: $code")
+        try {
+            if (isEnabled) {
+
+                currentDevices.clear()
+
+                val discoveredMacAddresses = mutableSetOf<String>()
+
+
+                YCBTClient.startScanBle(object : BleScanResponse {
+                    override fun onScanResponse(code: Int, scanDeviceBean: ScanDeviceBean?) {
+                        try {
+                            scanDeviceBean?.let { it -> // Use safe call operator and let block
+
+                                if (!discoveredMacAddresses.contains(it.deviceMac)) {
+
+                                    discoveredMacAddresses.add(it.deviceMac)
+                                    currentDevices.add(it)
+                                    scannedDevices.postValue(currentDevices.toList())
+                                    Log.i(
+                                        "BleService",
+                                        "Device found: ${it.deviceName}, Mac address: ${it.deviceMac}"
+                                    )
+                                }
+
+                            }
+                        }catch (e: Exception) {
+                            Log.e("BleService", "Error processing scan response", e)
+                        }
                     }
-                }
-            }, 5)
-
+                }, 5)
+                Log.i("BleService", "Scan started")
+            }
+        }catch (e: Exception) {
+            Log.e("BleService", "Error starting scan", e)
         }
-
     }
 
+    fun getScannedDevices(): LiveData<List<ScanDeviceBean>> = scannedDevices
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.i("BleService", "Service destroyed")
+    }
 
 }
 

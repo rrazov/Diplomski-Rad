@@ -4,11 +4,15 @@ import android.os.Bundle
 import android.Manifest
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.location.LocationManager
 import android.net.Uri
+import android.os.IBinder
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -28,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.location.LocationManagerCompat
+import com.example.myfittracker.domain.services.BleService
 import com.example.myfittracker.presentation.navigation.AppNavigation
 import com.example.myfittracker.ui.theme.MyFitTrackerTheme
 import kotlinx.coroutines.launch
@@ -56,6 +61,9 @@ class MainActivity : ComponentActivity() {
             MyFitTrackerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AppNavigation()
+
+
+                }
 
 //                    val permissionHandler = PermissionHandler()
 //                    val dialogQueue = permissionHandler.visiblePermissionDialogQueue
@@ -134,11 +142,13 @@ class MainActivity : ComponentActivity() {
 //
 //                            )
 //                        }
-                }
             }
+
+
         }
     }
 }
+
 
 @Composable
 fun RequestEnableBluetooth(
