@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,11 +42,16 @@ import com.example.myfittracker.domain.services.BleService
 import com.yucheng.ycbtsdk.Bean.ScanDeviceBean
 import com.yucheng.ycbtsdk.Constants
 import com.yucheng.ycbtsdk.Response.BleConnectResponse
+import com.yucheng.ycbtsdk.Response.BleDataResponse
 import com.yucheng.ycbtsdk.YCBTClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.HashMap
+
+
+
 
 @Composable
 fun ScanDevicesScreen(
@@ -53,6 +59,8 @@ fun ScanDevicesScreen(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
+
+
     val devices = remember {
         mutableStateListOf<ScanDeviceBean>()
     }
@@ -70,6 +78,12 @@ fun ScanDevicesScreen(
     var bleService: BleService? by remember {
         mutableStateOf<BleService?>(null)
     }
+
+    var temperature by remember {
+        mutableStateOf<String?>(null)
+    }
+    val lifecycleScope = rememberCoroutineScope()
+
 
     val serviceConnection = remember {
         object : ServiceConnection {
@@ -96,6 +110,17 @@ fun ScanDevicesScreen(
             }
         }
     }
+    LaunchedEffect(key1 = Unit)
+    {
+        lifecycleScope.launch {
+            while (true) {
+                getTemperature { newTemperature ->
+                    temperature = newTemperature
+                }
+                delay(5000)
+            }
+        }
+    }
 
 
     DisposableEffect(Unit)
@@ -110,50 +135,18 @@ fun ScanDevicesScreen(
         }
     }
 
-    fun connectToDevice(device: ScanDeviceBean) {
-        Log.i("ScanDevicesScreen", "Connecting to device: ${device.deviceName}")
-        YCBTClient.connectBle(device.deviceMac, object : BleConnectResponse{
-            override fun onConnectResponse(code: Int) {
-                if(code == Constants.CODE.Code_OK){
-                    CoroutineScope(Dispatchers.Main).launch {
-                        delay(1000)
-                        Toast.makeText(
-                            ctx,
-                            "Connected to device: ${device.deviceName}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } else if(code == Constants.CODE.Code_Failed){
-                    CoroutineScope(Dispatchers.Main).launch {
-                        delay(1000)
-                        Toast.makeText(
-                            ctx,
-                            "Failed to connect to device: ${device.deviceName}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } else{
-                    CoroutineScope(Dispatchers.Main).launch {
-                        delay(1000)
-                        Toast.makeText(
-                            ctx,
-                            "Unknown error occurred while connecting to device: ${device.deviceName}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
-            }
-        })
-        Toast.makeText(ctx, "Connecting to device: ${device.deviceName}", Toast.LENGTH_SHORT).show()
-
-    }
-
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        if (temperature != null) {
+            Text(text = "Temperature: $temperature°C")
+        }
+        else{
+            Text(text = "Loading temperature")
+        }
         Button(onClick = {
             ctx.startService(serviceIntent)
             Log.i("ScanDevicesScreen", "Start service button clicked")
@@ -167,17 +160,18 @@ fun ScanDevicesScreen(
             Text(text = "Stop Scan")
 
         }
-//        devices.forEach { device ->
-//            Text(text = "name: ${device.deviceName}, MAC: ${device.deviceMac}")
-//        }
-
+        Button(onClick = { TODO() }) {
+            Text("Get temperature")
+        }
         LazyColumn {
             items(devices) { device ->
-                DeviceItem(device = device, onClick = { connectToDevice(device) })
+                DeviceItem(device = device, onClick = { connectToDevice(device, ctx) })
             }
         }
     }
 }
+
+
 
 @Composable
 fun DeviceItem(device: ScanDeviceBean, onClick: () -> Unit){
@@ -193,4 +187,57 @@ fun DeviceItem(device: ScanDeviceBean, onClick: () -> Unit){
             Text(text = "MAC: ${device.deviceMac}")
         }
     }
+}
+
+fun connectToDevice(device: ScanDeviceBean, ctx: Context) {
+    Log.i("ScanDevicesScreen", "Connecting to device: ${device.deviceName}")
+    YCBTClient.connectBle(device.deviceMac, object : BleConnectResponse{
+        override fun onConnectResponse(code: Int) {
+            if(code == Constants.CODE.Code_OK){
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(1000)
+                    Toast.makeText(
+                        ctx,
+                        "Connected to device: ${device.deviceName}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } else if(code == Constants.CODE.Code_Failed){
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(1000)
+                    Toast.makeText(
+                        ctx,
+                        "Failed to connect to device: ${device.deviceName}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } else{
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(1000)
+                    Toast.makeText(
+                        ctx,
+                        "Unknown error occurred while connecting to device: ${device.deviceName}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    })
+    Toast.makeText(ctx, "Connecting to device: ${device.deviceName}", Toast.LENGTH_SHORT).show()
+
+}
+
+fun getTemperature(onTemperatureReceived: (String?) -> Unit){
+    YCBTClient.getRealTemp(object : BleDataResponse{
+        override fun onDataResponse(p0: Int, p1: Float, p2: HashMap<*, *>?) {
+            if(p0 == 0){
+                val temp = p2?.get("tempValue") as? String
+                Log.i("getTemperature", "Temperature: $temp")
+                CoroutineScope(Dispatchers.Main).launch {
+                    /// Switch to the main thread
+                    onTemperatureReceived(temp)
+                }
+            }
+        }
+    })
 }
