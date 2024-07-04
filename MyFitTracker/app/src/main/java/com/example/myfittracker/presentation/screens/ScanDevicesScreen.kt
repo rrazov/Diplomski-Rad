@@ -100,6 +100,14 @@ fun ScanDevicesScreen(
                     Log.i("ScanDevicesScreen", "New devices: ${newDevices.size}")
                 })
                 Log.i("ScanDevicesScreen", "Service connected")
+
+                /// Dodano za test temperature
+                bleService?.getTemperatureData()?.observe(lifecycleOwner, Observer { newTemperature ->
+                        newTemperature?.let {
+                            temperature = newTemperature
+                            Log.i("ScanDevicesScreen", "New temperature: $newTemperature")
+                        }
+                    })
             }
 
             override fun onServiceDisconnected(name: ComponentName?) {

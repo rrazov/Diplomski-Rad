@@ -19,10 +19,12 @@ import androidx.lifecycle.LiveDataScope
 import androidx.lifecycle.MutableLiveData
 import com.example.myfittracker.MyApplication
 import com.yucheng.ycbtsdk.Bean.ScanDeviceBean
+import com.yucheng.ycbtsdk.Response.BleDataResponse
 import com.yucheng.ycbtsdk.Response.BleScanResponse
 import com.yucheng.ycbtsdk.YCBTClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -31,8 +33,12 @@ class BleService : Service(){
     private var isEnabled = false
     private val scannedDevices = MutableLiveData<List<ScanDeviceBean>>()
     private val currentDevices = mutableListOf<ScanDeviceBean>()
+    private var isProcessing = false
+    private var isScanning = false
 
     private val binder = LocalBinder()
+
+    private val temperatureData = MutableLiveData<String?>()
 
     inner class LocalBinder : Binder() {
         fun getService(): BleService = this@BleService
@@ -54,13 +60,14 @@ class BleService : Service(){
         super.onStartCommand(intent, flags, startId)
 
         startScan()
+        Log.i("BleService", "StartScan started")
         return START_STICKY
     }
 
 
     private fun startScan(){
         try {
-            if (isEnabled) {
+            if (isEnabled && !isScanning) {
 
                 currentDevices.clear()
 
@@ -82,21 +89,87 @@ class BleService : Service(){
                                         "Device found: ${it.deviceName}, Mac address: ${it.deviceMac}"
                                     )
                                 }
-
                             }
                         }catch (e: Exception) {
                             Log.e("BleService", "Error processing scan response", e)
                         }
                     }
                 }, 5)
+                CoroutineScope(Dispatchers.IO).launch {
+                    delay(5000) /// To ensure that scan is finished
+                    isScanning = false;
+                    /// Start the process once devices are discovered
+                    if (currentDevices.isNotEmpty()) {
+                        /// Start the cycle if not already started
+                        if (!isProcessing) {
+                            isProcessing = true
+                            processDevices()
+                        }
+                    }
+                }
                 Log.i("BleService", "Scan started")
             }
         }catch (e: Exception) {
             Log.e("BleService", "Error starting scan", e)
+            isScanning = false
+        }
+    }
+
+
+    private fun processDevices() {
+        CoroutineScope(Dispatchers.IO).launch {
+            while (isProcessing && currentDevices.isNotEmpty()) {
+                Log.i("BleService", "Processing devices")
+                val device = currentDevices.first()
+                connectToDevice(device)
+                delay(10000) // Adjust delay as necessary to ensure data is fetched
+                disconnectFromDevice(device)
+                rotateDeviceList()
+            }
+        }
+    }
+
+    private fun connectToDevice(device: ScanDeviceBean) {
+        Log.i("BleService", "Connecting to device: ${device.deviceName}")
+        YCBTClient.connectBle(device.deviceMac) { code ->
+            if (code == 0) {
+                Log.i("BleService", "Connected to device: ${device.deviceName}")
+                fetchDataFromDevice(device)
+            } else {
+                Log.e("BleService", "Failed to connect to device: ${device.deviceName}")
+            }
+        }
+    }
+
+    private fun fetchDataFromDevice(device: ScanDeviceBean) {
+        YCBTClient.getRealTemp(object : BleDataResponse {
+            override fun onDataResponse(i: Int, v: Float, hashMap: HashMap<*, *>) {
+                if (i == 0) {
+                    val temp = hashMap["tempValue"] as? String
+                    Log.i("BleService", "Fetched data from device: ${device.deviceName}, Temp: $temp")
+                    temperatureData.postValue(temp) /// Update LiveData with the fetched temperature
+                }
+            }
+        })
+    }
+
+    private fun disconnectFromDevice(device: ScanDeviceBean) {
+
+        YCBTClient.disconnectBle()
+        Log.i("BleService", "Disconnected from device: ${device.deviceName}")
+
+    }
+
+    private fun rotateDeviceList() {
+        if (currentDevices.isNotEmpty()) {
+            val device = currentDevices.removeAt(0)
+            currentDevices.add(device)
+            scannedDevices.postValue(currentDevices.toList())
         }
     }
 
     fun getScannedDevices(): LiveData<List<ScanDeviceBean>> = scannedDevices
+    fun getTemperatureData(): LiveData<String?> = temperatureData // Expose LiveData
 
     override fun onDestroy() {
         super.onDestroy()
