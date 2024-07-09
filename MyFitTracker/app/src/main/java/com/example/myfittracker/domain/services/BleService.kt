@@ -35,6 +35,7 @@ class BleService : Service(){
     private val currentDevices = mutableListOf<ScanDeviceBean>()
     private var isProcessing = false
     private var isScanning = false
+    private var startProcessing = false
 
     private val binder = LocalBinder()
 
@@ -116,6 +117,16 @@ class BleService : Service(){
     }
 
 
+    fun startProcessingDevices() {
+        startProcessing = true
+        if (currentDevices.isNotEmpty()) {
+            if (!isProcessing) {
+                isProcessing = true
+                processDevices()
+            }
+        }
+    }
+
     private fun processDevices() {
         CoroutineScope(Dispatchers.IO).launch {
             while (isProcessing && currentDevices.isNotEmpty()) {
@@ -126,6 +137,9 @@ class BleService : Service(){
                 disconnectFromDevice(device)
                 rotateDeviceList()
             }
+            startProcessing = false
+            isProcessing = false
+            Log.i("BleService", "Processing stopped")
         }
     }
 

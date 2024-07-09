@@ -193,13 +193,6 @@ fun ScanDevicesScreen(
 //            Text(text = "Stop Scan")
 //
 //        }
-        Button(onClick = {
-            TODO()
-        }) {
-            Text(text = "Connect")
-        }
-
-
 
         LazyColumn {
             items(devices, key = { it.deviceMac + recompositionTrigger }) { device ->
@@ -221,6 +214,12 @@ fun ScanDevicesScreen(
                     }
                 }
             }
+        }
+
+        Button(onClick = {
+            bleService?.startProcessingDevices()
+        }) {
+            Text(text = "Connect")
         }
 
     }
