@@ -17,17 +17,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -36,9 +42,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.myfittracker.MyApplication
 import com.example.myfittracker.domain.services.BleService
+import com.example.myfittracker.presentation.viewmodel.ScanDevicesScreenViewModel
 import com.yucheng.ycbtsdk.Bean.ScanDeviceBean
 import com.yucheng.ycbtsdk.Constants
 import com.yucheng.ycbtsdk.Response.BleConnectResponse
@@ -48,6 +56,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.HashMap
 
 
@@ -55,15 +64,32 @@ import java.util.HashMap
 
 @Composable
 fun ScanDevicesScreen(
+    viewModel: ScanDevicesScreenViewModel = viewModel(),
     ctx: Context,
     navController: NavController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
 
+    var recompositionTrigger by remember { mutableStateOf(0) }
+    val discoveredDevicesMap by viewModel
+        .discoveredDevicesMap
+        .observeAsState(mutableMapOf())
 
-    val devices = remember {
-        mutableStateListOf<ScanDeviceBean>()
+    val devices by viewModel
+        .devices
+        .observeAsState(emptyList())
+
+    LaunchedEffect(key1 = Unit){
+        snapshotFlow { discoveredDevicesMap }
+            .collect{updatedMap ->
+
+                withContext(Dispatchers.Main){
+                    Log.d("ScanDevicesScreen", "Discovered devices map updated: $updatedMap")
+                    recompositionTrigger++
+                }
+            }
     }
+
     val serviceIntent =  remember {
         Intent(ctx, BleService::class.java)
     }
@@ -95,8 +121,8 @@ fun ScanDevicesScreen(
 
                 // Observe LiveData from BleService
                 bleService?.getScannedDevices()?.observe(lifecycleOwner, Observer { newDevices ->
-                    devices.clear()
-                    devices.addAll(newDevices)
+                    viewModel.updateDevices(newDevices)
+                    recompositionTrigger++
                     Log.i("ScanDevicesScreen", "New devices: ${newDevices.size}")
                 })
                 Log.i("ScanDevicesScreen", "Service connected")
@@ -118,17 +144,17 @@ fun ScanDevicesScreen(
             }
         }
     }
-    LaunchedEffect(key1 = Unit)
-    {
-        lifecycleScope.launch {
-            while (true) {
-                getTemperature { newTemperature ->
-                    temperature = newTemperature
-                }
-                delay(5000)
-            }
-        }
-    }
+//    LaunchedEffect(key1 = Unit)
+//    {
+//        lifecycleScope.launch {
+//            while (true) {
+//                getTemperature { newTemperature ->
+//                    temperature = newTemperature
+//                }
+//                delay(5000)
+//            }
+//        }
+//    }
 
 
     DisposableEffect(Unit)
@@ -149,51 +175,110 @@ fun ScanDevicesScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (temperature != null) {
-            Text(text = "Temperature: $temperature°C")
-        }
-        else{
-            Text(text = "Loading temperature")
-        }
+//        if (temperature != null) {
+//            Text(text = "Temperature: $temperature°C")
+//        } else{
+//            Text(text = "Loading temperature")
+//        }
         Button(onClick = {
             ctx.startService(serviceIntent)
             Log.i("ScanDevicesScreen", "Start service button clicked")
         }) {
             Text(text = "Scan Devices")
         }
+//        Button(onClick = {
+//            ctx.stopService(serviceIntent)
+//            Log.i("ScanDevicesScreen", "Stop service button clicked")
+//        }) {
+//            Text(text = "Stop Scan")
+//
+//        }
         Button(onClick = {
-            ctx.stopService(serviceIntent)
-            Log.i("ScanDevicesScreen", "Stop service button clicked")
+            TODO()
         }) {
-            Text(text = "Stop Scan")
+            Text(text = "Connect")
+        }
 
-        }
-        Button(onClick = { TODO() }) {
-            Text("Get temperature")
-        }
+
+
         LazyColumn {
-            items(devices) { device ->
-                DeviceItem(device = device, onClick = { connectToDevice(device, ctx) })
+            items(devices, key = { it.deviceMac + recompositionTrigger }) { device ->
+                val displayName = discoveredDevicesMap[device.deviceMac] ?: device.deviceMac
+                DeviceItem(
+                    device = device,
+                    onNameEntered = { name ->
+                        viewModel.updateDeviceName(device.deviceMac, name)
+                        Log.d(
+                            "ScanDevicesScreen",
+                            "Device name updated for ${device.deviceMac}: $name"
+                        )
+                        recompositionTrigger++
+                    }
+                ) {
+                    Column {
+                        //Text(text = "Name: $device.deviceName")
+                        Text(text = "ID: $displayName")
+                    }
+                }
             }
         }
+
     }
 }
 
 
-
 @Composable
-fun DeviceItem(device: ScanDeviceBean, onClick: () -> Unit){
+fun DeviceItem(
+    device: ScanDeviceBean,
+    onNameEntered: (String) -> Unit,
+    content: @Composable () -> Unit) {
+    var showDialog by remember {
+        mutableStateOf(false)
+    }
+    var enteredName by remember()
+    {
+        mutableStateOf("")
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable { showDialog = true }
             .padding(16.dp)
 
     ) {
-        Column {
-            Text(text = "Name: ${device.deviceName}")
-            Text(text = "MAC: ${device.deviceMac}")
-        }
+        content()
+    }
+
+    if (showDialog) {
+        Log.d("ScanDevicesScreen", "Showing dialog")
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                Button(onClick = {
+                    Log.d("DeviceItem", "Calling onNameEntered with name: $enteredName")
+                    onNameEntered(enteredName)
+                    showDialog = false
+
+                }) {
+                    Text("Save")
+                }
+            },
+            title = {Text("Enter Device Name")},
+            text = {
+                OutlinedTextField(
+                    value = enteredName,
+                    onValueChange = {
+                        enteredName = it
+                        Log.d("ScanDevicesScreen", "Entered name after: $enteredName")},
+                    label = { Text("Device Name") }
+                )
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
