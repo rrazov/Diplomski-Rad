@@ -1,6 +1,5 @@
 package com.example.myfittracker.presentation.screens
 
-import android.bluetooth.BluetoothClass.Device
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -24,11 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -36,17 +32,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.myfittracker.MyApplication
 import com.example.myfittracker.domain.services.BleService
-import com.example.myfittracker.presentation.viewmodel.ScanDevicesScreenViewModel
+import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewModel
 import com.yucheng.ycbtsdk.Bean.ScanDeviceBean
 import com.yucheng.ycbtsdk.Constants
 import com.yucheng.ycbtsdk.Response.BleConnectResponse
@@ -64,7 +57,7 @@ import java.util.HashMap
 
 @Composable
 fun ScanDevicesScreen(
-    viewModel: ScanDevicesScreenViewModel = viewModel(),
+    viewModel: SharedDevicesScreenViewModel = viewModel(),
     ctx: Context,
     navController: NavController,
     modifier: Modifier = Modifier,
