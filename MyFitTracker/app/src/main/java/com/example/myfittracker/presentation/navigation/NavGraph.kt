@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.myfittracker.presentation.screens.ListOfPeopleScreen
 import com.example.myfittracker.presentation.screens.ScanDevicesScreen
 import com.example.myfittracker.presentation.screens.WelcomeScreen
 import com.example.myfittracker.presentation.viewmodel.ScanDevicesScreenViewModel
@@ -29,6 +30,9 @@ fun AppNavigation(
                 viewModel = viewModel,
                 ctx = LocalContext.current,
                 navController)
+        }
+        composable(Screens.ListOfPeople.route){
+            ListOfPeopleScreen()
         }
 
     }

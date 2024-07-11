@@ -218,6 +218,12 @@ fun ScanDevicesScreen(
 
         Button(onClick = {
             bleService?.startProcessingDevices()
+            Toast.makeText(ctx, "Connecting to the devices", Toast.LENGTH_SHORT).show()
+
+            CoroutineScope(Dispatchers.Main).launch {
+                delay(2000)
+                navController.navigate("list_of_people")
+            }
         }) {
             Text(text = "Connect")
         }

@@ -96,18 +96,18 @@ class BleService : Service(){
                         }
                     }
                 }, 5)
-                CoroutineScope(Dispatchers.IO).launch {
-                    delay(5000) /// To ensure that scan is finished
-                    isScanning = false;
-                    /// Start the process once devices are discovered
-                    if (currentDevices.isNotEmpty()) {
-                        /// Start the cycle if not already started
-                        if (!isProcessing) {
-                            isProcessing = true
-                            processDevices()
-                        }
-                    }
-                }
+//                CoroutineScope(Dispatchers.IO).launch {
+//                    delay(5000) /// To ensure that scan is finished
+//                    isScanning = false;
+//                    /// Start the process once devices are discovered
+//                    if (currentDevices.isNotEmpty()) {
+//                        /// Start the cycle if not already started
+//                        if (!isProcessing) {
+//                            isProcessing = true
+//                            processDevices()
+//                        }
+//                    }
+//                }
                 Log.i("BleService", "Scan started")
             }
         }catch (e: Exception) {
