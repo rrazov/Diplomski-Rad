@@ -40,7 +40,7 @@ fun ListOfPeopleScreen(
                 macAddress = entry.key,
                 modifier = Modifier.fillMaxWidth()
             ) { macAddress ->
-                navController.navigate("people_details_screen/$macAddress")
+                navController.navigate("person_details_screen/$macAddress")
             }
 
         }
@@ -58,11 +58,13 @@ fun PeopleListItem(
     Row(
         modifier = modifier
             .clickable { onClick(macAddress) }
-            .padding(16.dp)
+            .padding(top = 20.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
     ){
         Text(
             text = name,
-            fontSize = 20.sp
+            fontSize = 20.sp,
+            modifier = Modifier
+                .padding(top = 20.dp)
         )
     }
 }

@@ -32,12 +32,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.myfittracker.domain.services.BleService
 import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewModel
 import com.yucheng.ycbtsdk.Bean.ScanDeviceBean
@@ -62,7 +65,10 @@ fun ScanDevicesScreen(
     navController: NavController,
     modifier: Modifier = Modifier,
 ) {
-
+    val isScanned by viewModel.isScanned.observeAsState(false)
+    var isConfirmed by remember {
+        mutableStateOf(false)
+    }
     var recompositionTrigger by remember { mutableStateOf(0) }
     val discoveredDevicesMap by viewModel
         .discoveredDevicesMap
@@ -74,7 +80,7 @@ fun ScanDevicesScreen(
 
     LaunchedEffect(key1 = Unit){
         snapshotFlow { discoveredDevicesMap }
-            .collect{updatedMap ->
+            .collect { updatedMap ->
 
                 withContext(Dispatchers.Main){
                     Log.d("ScanDevicesScreen", "Discovered devices map updated: $updatedMap")
@@ -175,6 +181,7 @@ fun ScanDevicesScreen(
 //        }
         Button(onClick = {
             ctx.startService(serviceIntent)
+            viewModel.startScanning()
             Log.i("ScanDevicesScreen", "Start service button clicked")
         }) {
             Text(text = "Scan Devices")
@@ -208,17 +215,26 @@ fun ScanDevicesScreen(
                 }
             }
         }
-
-        Button(onClick = {
-            bleService?.startProcessingDevices()
-            Toast.makeText(ctx, "Connecting to the devices", Toast.LENGTH_SHORT).show()
-
-            CoroutineScope(Dispatchers.Main).launch {
-                delay(2000)
-                navController.navigate("list_of_people")
+        if(isScanned && !isConfirmed) {
+            Button(onClick = {
+                isConfirmed = true
+            }) {
+                Text(text = "Confirm")
             }
-        }) {
-            Text(text = "Connect")
+        }
+        if(isConfirmed) {
+            Button(onClick = {
+                bleService?.startProcessingDevices()
+                Toast.makeText(ctx, "Connecting to the devices", Toast.LENGTH_SHORT).show()
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    delay(2000)
+                    navController.navigate("list_of_people")
+                }
+                isConfirmed = false
+            }) {
+                Text(text = "Connect")
+            }
         }
 
     }
@@ -278,6 +294,20 @@ fun DeviceItem(
             }
         )
     }
+}
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true
+)
+@Composable
+private fun ScanDevicesScreenPreview() {
+    val previewViewModel = SharedDevicesScreenViewModel()
+    ScanDevicesScreen(
+        viewModel = previewViewModel,
+        ctx = LocalContext.current,
+        navController = rememberNavController()
+    )
 }
 
 fun connectToDevice(device: ScanDeviceBean, ctx: Context) {

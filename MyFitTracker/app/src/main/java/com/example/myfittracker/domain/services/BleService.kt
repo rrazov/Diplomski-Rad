@@ -148,20 +148,27 @@ class BleService : Service(){
         YCBTClient.connectBle(device.deviceMac) { code ->
             if (code == 0) {
                 Log.i("BleService", "Connected to device: ${device.deviceName}")
-                fetchDataFromDevice(device)
+                //fetchDataFromDevice(device)
             } else {
                 Log.e("BleService", "Failed to connect to device: ${device.deviceName}")
             }
         }
     }
 
-    private fun fetchDataFromDevice(device: ScanDeviceBean) {
+    fun fetchDataFromDevice(
+        device: ScanDeviceBean,
+        callback: (String?) -> Unit
+    ) {
         YCBTClient.getRealTemp(object : BleDataResponse {
             override fun onDataResponse(i: Int, v: Float, hashMap: HashMap<*, *>) {
                 if (i == 0) {
                     val temp = hashMap["tempValue"] as? String
-                    Log.i("BleService", "Fetched data from device: ${device.deviceName}, Temp: $temp")
-                    temperatureData.postValue(temp) /// Update LiveData with the fetched temperature
+                    Log.i(
+                        "BleService",
+                        "Fetched data from device: ${device.deviceName}, Temp: $temp"
+                    )
+                    //temperatureData.postValue(temp) /// Update LiveData with the fetched temperature
+                    callback(temp)
                 }
             }
         })

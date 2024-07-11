@@ -89,6 +89,12 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
+    // Mockito for unit testing
+    testImplementation(libs.mockito.core)
+
+    // Mockito for Android instrumentation tests
+    androidTestImplementation(libs.mockito.android)
+
 
 
 }
