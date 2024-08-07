@@ -4,16 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.myfittracker.domain.services.BleService
 
-class PersonViewModelFactory(
-    private val macAddress: String,
-    //private val name: String,
-    //private val bleService: BleService
-) : ViewModelProvider.Factory
-{
+class SharedPersonViewModelFactory(private val bleService: BleService) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(PersonViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(SharedPersonViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return PersonViewModel(macAddress) as T
+            return SharedPersonViewModel(bleService) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

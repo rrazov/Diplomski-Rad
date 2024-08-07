@@ -6,7 +6,9 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -18,6 +20,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.LiveDataScope
 import androidx.lifecycle.MutableLiveData
 import com.example.myfittracker.MyApplication
+import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewModel
+import com.example.myfittracker.presentation.viewmodel.ViewModelManager
 import com.yucheng.ycbtsdk.Bean.ScanDeviceBean
 import com.yucheng.ycbtsdk.Response.BleDataResponse
 import com.yucheng.ycbtsdk.Response.BleScanResponse
@@ -27,9 +31,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class BleService : Service(){
+class BleService : Service() {
 
+    private lateinit var sharedDevicesScreenViewModel: SharedDevicesScreenViewModel
     private var isEnabled = false
     private val scannedDevices = MutableLiveData<List<ScanDeviceBean>>()
     private val currentDevices = mutableListOf<ScanDeviceBean>()
@@ -54,19 +60,22 @@ class BleService : Service(){
         super.onCreate()
         val bluetoothAdapter = (applicationContext as MyApplication).bluetoothAdapter
         isEnabled = bluetoothAdapter.isEnabled
+
+        val app = application as MyApplication
+        sharedDevicesScreenViewModel = app.provideSharedDevicesScreenViewModel()
         Log.i("BleService", "Service created, Bluetooth is enabled: $isEnabled")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
-        startScan()
-        Log.i("BleService", "StartScan started")
+        //startScan()
+        Log.i("BleService", "Service started")
         return START_STICKY
     }
 
 
-    private fun startScan(){
+    fun startScan() {
         try {
             if (isEnabled && !isScanning) {
 
@@ -84,6 +93,7 @@ class BleService : Service(){
 
                                     discoveredMacAddresses.add(it.deviceMac)
                                     currentDevices.add(it)
+                                    Log.i("BleService","currentDevices: ${currentDevices.size}")
                                     scannedDevices.postValue(currentDevices.toList())
                                     Log.i(
                                         "BleService",
@@ -109,15 +119,30 @@ class BleService : Service(){
 //                    }
 //                }
                 Log.i("BleService", "Scan started")
+                CoroutineScope(Dispatchers.IO).launch {
+                    delay(5000)
+                    withContext(Dispatchers.Main) {
+                        scannedDevices.value?.let { it1 ->
+                            sharedDevicesScreenViewModel.updateDevices(
+                                it1
+                            )
+                        }
+                    }
+                }
             }
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             Log.e("BleService", "Error starting scan", e)
             isScanning = false
         }
     }
 
+    fun initializePersonViewModels() {
+        ViewModelManager.initializeViewModels(scannedDevices)
+    }
+
 
     fun startProcessingDevices() {
+        Log.i("BleService", "currentDevices: ${currentDevices.size}")
         startProcessing = true
         if (currentDevices.isNotEmpty()) {
             if (!isProcessing) {
@@ -148,7 +173,7 @@ class BleService : Service(){
         YCBTClient.connectBle(device.deviceMac) { code ->
             if (code == 0) {
                 Log.i("BleService", "Connected to device: ${device.deviceName}")
-                //fetchDataFromDevice(device)
+                fetchDataFromDevice(device)
             } else {
                 Log.e("BleService", "Failed to connect to device: ${device.deviceName}")
             }
@@ -157,7 +182,7 @@ class BleService : Service(){
 
     fun fetchDataFromDevice(
         device: ScanDeviceBean,
-        callback: (String?) -> Unit
+        //callback: (String?) -> Unit
     ) {
         YCBTClient.getRealTemp(object : BleDataResponse {
             override fun onDataResponse(i: Int, v: Float, hashMap: HashMap<*, *>) {
@@ -168,7 +193,11 @@ class BleService : Service(){
                         "Fetched data from device: ${device.deviceName}, Temp: $temp"
                     )
                     //temperatureData.postValue(temp) /// Update LiveData with the fetched temperature
-                    callback(temp)
+                    //callback(temp)
+                    Handler(Looper.getMainLooper()).post {
+                        val viewModel = ViewModelManager.getViewModel(device.deviceMac)
+                        viewModel?.updateTemperature(temp)
+                    }
                 }
             }
         })

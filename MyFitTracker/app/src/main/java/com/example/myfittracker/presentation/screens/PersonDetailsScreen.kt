@@ -8,22 +8,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.myfittracker.domain.services.BleService
 import com.example.myfittracker.presentation.viewmodel.PersonViewModel
 import com.example.myfittracker.presentation.viewmodel.TestPersonViewModel
+import com.example.myfittracker.presentation.viewmodel.ViewModelManager
 
 @Composable
 fun PersonDetailsScreen(
-    //macAddress: String,
+    macAddress: String,
     //sharedViewModel: SharedDevicesScreenViewModel,
-    viewModel: PersonViewModel
+    //viewModel: PersonViewModel
 ) {
     //Log.d("PersonDetailsScreen", "Received macAddress: $macAddress")
     //val deviceName = sharedViewModel.discoveredDevicesMap.value?.get(macAddress) ?: "Unknown Device"
 
     // ... Logic to fetch and display data for the device with the given macAddress ...
 
+    val viewModel = ViewModelManager.getViewModel(macAddress)
+
     Column {
-        Text("Name: ${viewModel.name}")
-        Text("Temperature: ${viewModel.temperature.observeAsState().value ?: "Loading..."}")
-        Text("Heart Rate: ${viewModel.heartRate.observeAsState().value ?: "Loading..."}")
+        //Text("Name: ${viewModel.name}")
+        Text("Temperature: ${viewModel?.temperature?.observeAsState()?.value ?: "Loading..."}")
+        Text("Heart Rate: ${viewModel?.heartRate?.observeAsState()?.value ?: "Loading..."}")
     }
 //    Column (
 //        modifier = Modifier
@@ -51,7 +54,7 @@ private fun PersonDetailsScreenPreview () {
     val bleService = BleService()
     val previewViewModel = TestPersonViewModel("1", "Roko", bleService)
     previewViewModel.setTemperature("37.2")
-    PersonDetailsScreen(previewViewModel)
+    PersonDetailsScreen(macAddress = "dr2334d3")
 
 }
 

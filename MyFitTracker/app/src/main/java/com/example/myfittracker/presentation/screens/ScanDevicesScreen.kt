@@ -63,6 +63,7 @@ fun ScanDevicesScreen(
     viewModel: SharedDevicesScreenViewModel = viewModel(),
     ctx: Context,
     navController: NavController,
+    bleService: BleService,
     modifier: Modifier = Modifier,
 ) {
     val isScanned by viewModel.isScanned.observeAsState(false)
@@ -89,9 +90,9 @@ fun ScanDevicesScreen(
             }
     }
 
-    val serviceIntent =  remember {
-        Intent(ctx, BleService::class.java)
-    }
+//    val serviceIntent = remember {
+//        Intent(ctx, BleService::class.java)
+//    }
 
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 
@@ -100,9 +101,9 @@ fun ScanDevicesScreen(
         mutableStateOf(false)
     }
 
-    var bleService: BleService? by remember {
-        mutableStateOf<BleService?>(null)
-    }
+//    var bleService: BleService? by remember {
+//        mutableStateOf<BleService?>(null)
+//    }
 
     var temperature by remember {
         mutableStateOf<String?>(null)
@@ -110,39 +111,39 @@ fun ScanDevicesScreen(
     val lifecycleScope = rememberCoroutineScope()
 
 
-    val serviceConnection = remember {
-        object : ServiceConnection {
-            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                Log.i("ScanDevicesScreen", "ServiceConnection onServiceConnected called")
-                val binder = service as BleService.LocalBinder
-                bleService = binder.getService()
-                isServiceBound = true;
-
-                // Observe LiveData from BleService
-                bleService?.getScannedDevices()?.observe(lifecycleOwner, Observer { newDevices ->
-                    viewModel.updateDevices(newDevices)
-                    recompositionTrigger++
-                    Log.i("ScanDevicesScreen", "New devices: ${newDevices.size}")
-                })
-                Log.i("ScanDevicesScreen", "Service connected")
-
-                /// Dodano za test temperature
-                bleService?.getTemperatureData()?.observe(lifecycleOwner, Observer { newTemperature ->
-                        newTemperature?.let {
-                            temperature = newTemperature
-                            Log.i("ScanDevicesScreen", "New temperature: $newTemperature")
-                        }
-                    })
-            }
-
-            override fun onServiceDisconnected(name: ComponentName?) {
-                // Handle service disconnection
-                isServiceBound = false;
-                bleService = null;
-                Log.i("ScanDevicesScreen", "Service disconnected")
-            }
-        }
-    }
+//    val serviceConnection = remember {
+//        object : ServiceConnection {
+//            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+//                Log.i("ScanDevicesScreen", "ServiceConnection onServiceConnected called")
+//                val binder = service as BleService.LocalBinder
+//                bleService = binder.getService()
+//                isServiceBound = true;
+//
+//                // Observe LiveData from BleService
+//                bleService?.getScannedDevices()?.observe(lifecycleOwner, Observer { newDevices ->
+//                    viewModel.updateDevices(newDevices)
+//                    recompositionTrigger++
+//                    Log.i("ScanDevicesScreen", "New devices: ${newDevices.size}")
+//                })
+//                Log.i("ScanDevicesScreen", "Service connected")
+//
+//                /// Dodano za test temperature
+//                bleService?.getTemperatureData()?.observe(lifecycleOwner, Observer { newTemperature ->
+//                        newTemperature?.let {
+//                            temperature = newTemperature
+//                            Log.i("ScanDevicesScreen", "New temperature: $newTemperature")
+//                        }
+//                    })
+//            }
+//
+//            override fun onServiceDisconnected(name: ComponentName?) {
+//                // Handle service disconnection
+//                isServiceBound = false;
+//                bleService = null;
+//                Log.i("ScanDevicesScreen", "Service disconnected")
+//            }
+//        }
+//    }
 //    LaunchedEffect(key1 = Unit)
 //    {
 //        lifecycleScope.launch {
@@ -156,17 +157,17 @@ fun ScanDevicesScreen(
 //    }
 
 
-    DisposableEffect(Unit)
-    {
-        Log.i("ScanDevicesScreen", "Binding service")
-        ctx.bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
-        onDispose()
-        {
-            if (isServiceBound) {
-                ctx.unbindService(serviceConnection)
-            }
-        }
-    }
+//    DisposableEffect(Unit)
+//    {
+//        Log.i("ScanDevicesScreen", "Binding service")
+//        ctx.bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+//        onDispose()
+//        {
+//            if (isServiceBound) {
+//                ctx.unbindService(serviceConnection)
+//            }
+//        }
+//    }
 
 
     Column(
@@ -180,7 +181,8 @@ fun ScanDevicesScreen(
 //            Text(text = "Loading temperature")
 //        }
         Button(onClick = {
-            ctx.startService(serviceIntent)
+            //ctx.startService(serviceIntent)
+            bleService.startScan()
             viewModel.startScanning()
             Log.i("ScanDevicesScreen", "Start service button clicked")
         }) {
@@ -218,13 +220,14 @@ fun ScanDevicesScreen(
         if(isScanned && !isConfirmed) {
             Button(onClick = {
                 isConfirmed = true
+                bleService.initializePersonViewModels()
             }) {
                 Text(text = "Confirm")
             }
         }
         if(isConfirmed) {
             Button(onClick = {
-                bleService?.startProcessingDevices()
+                bleService.startProcessingDevices()
                 Toast.makeText(ctx, "Connecting to the devices", Toast.LENGTH_SHORT).show()
 
                 CoroutineScope(Dispatchers.Main).launch {
@@ -236,6 +239,22 @@ fun ScanDevicesScreen(
                 Text(text = "Connect")
             }
         }
+
+//        if (isScanned && !isConfirmed) {
+//            Button(onClick = {
+//                isConfirmed = true
+//                bleService.initializePersonViewModels()
+//                bleService.startProcessingDevices() // Start processing immediately after initialization
+//                Toast.makeText(ctx, "Connecting to thedevices", Toast.LENGTH_SHORT).show()
+//
+//                CoroutineScope(Dispatchers.Main).launch {
+//                    delay(2000)
+//                    navController.navigate("list_of_people")
+//                }
+//            }) {
+//                Text(text = "Confirm and Connect") // Combine the actions
+//            }
+//        }
 
     }
 }
@@ -306,7 +325,8 @@ private fun ScanDevicesScreenPreview() {
     ScanDevicesScreen(
         viewModel = previewViewModel,
         ctx = LocalContext.current,
-        navController = rememberNavController()
+        navController = rememberNavController(),
+        bleService = BleService()
     )
 }
 

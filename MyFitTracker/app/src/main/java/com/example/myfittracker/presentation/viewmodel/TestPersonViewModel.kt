@@ -6,7 +6,7 @@ class TestPersonViewModel(
     macAddress: String,
     name: String,
     bleService: BleService
-) : PersonViewModel(macAddress, name, bleService) {
+) : PersonViewModel(macAddress) {
     override fun setTemperature(temperature: String?) {
         super.setTemperature(temperature)
     }

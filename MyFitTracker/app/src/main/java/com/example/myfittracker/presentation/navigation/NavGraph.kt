@@ -18,11 +18,13 @@ import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewMo
 
 @Composable
 fun AppNavigation(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    bleService: BleService,
+    sharedDevicesScreenViewModel: SharedDevicesScreenViewModel
 )
 {
     // Get ViewModel instance
-    val sharedViewModel: SharedDevicesScreenViewModel = viewModel()
+    //val sharedViewModel: SharedDevicesScreenViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = Screens.Welcome.route) {
         composable(Screens.Welcome.route) {
@@ -32,21 +34,22 @@ fun AppNavigation(
         }
         composable(Screens.ScanDevice.route) {
             ScanDevicesScreen(
-                viewModel = sharedViewModel,
+                viewModel = sharedDevicesScreenViewModel,
                 ctx = LocalContext.current,
-                navController)
+                navController,
+                bleService = bleService)
         }
-        composable(Screens.ListOfPeople.route){
+        composable(Screens.ListOfPeople.route) {
             ListOfPeopleScreen(
-                sharedViewModel,
+                sharedDevicesScreenViewModel,
                 navController
             )
         }
         composable(Screens.PersonDetailsScreen.route) { backStackEntry ->
             val macAddress = backStackEntry.arguments?.getString("macAddress") ?: ""
-            val bleService = BleService()
-            val viewModel: PersonViewModel = viewModel(factory = PersonViewModelFactory(macAddress, "", bleService))
-            PersonDetailsScreen(viewModel = viewModel)
+            //val bleService = BleService()
+            //val viewModel: PersonViewModel = viewModel(factory = PersonViewModelFactory(macAddress, "", bleService))
+            PersonDetailsScreen(macAddress)
         }
 
     }

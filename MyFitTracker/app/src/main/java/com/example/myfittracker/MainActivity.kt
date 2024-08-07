@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Binder
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
@@ -32,14 +33,37 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.location.LocationManagerCompat
+import androidx.lifecycle.ViewModelStoreOwner
 import com.example.myfittracker.domain.services.BleService
 import com.example.myfittracker.presentation.navigation.AppNavigation
+import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewModel
 import com.example.myfittracker.ui.theme.MyFitTrackerTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
+    private val binder = MainActivityBinder()
+
+    inner class MainActivityBinder : Binder() {
+        fun getActivity(): MainActivity = this@MainActivity
+    }
+
     private var isBluetoothEnabled by mutableStateOf(false)
+    private lateinit var sharedDevicesScreenViewModel: SharedDevicesScreenViewModel
+    private var bleService: BleService? = null
+    private var isServiceBound by mutableStateOf(false)
+
+    private val serviceConnection = object : ServiceConnection{
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+           val binder = service as BleService.LocalBinder
+            bleService = binder.getService()
+            isServiceBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            isServiceBound = false
+        }
+    }
 
     private val permissionToRequest = arrayOf(
         Manifest.permission.BLUETOOTH,
@@ -56,11 +80,34 @@ class MainActivity : ComponentActivity() {
         val bluetoothAdapter = (applicationContext as MyApplication).bluetoothAdapter
         isBluetoothEnabled = bluetoothAdapter.isEnabled
 
+        val app = application as MyApplication
+        sharedDevicesScreenViewModel = app.provideSharedDevicesScreenViewModel()
+
+        // Start the service
+        val serviceIntent = Intent(this, BleService::class.java)
+
+        startService(serviceIntent)
+
+        // Bind to the service
+        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+
+        //val bleService = (application as MyApplication).bleService
+
+
+
         enableEdgeToEdge()
         setContent {
             MyFitTrackerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    AppNavigation()
+                    if (isServiceBound) {
+                        AppNavigation(
+                            bleService = bleService!!,
+                            sharedDevicesScreenViewModel = sharedDevicesScreenViewModel
+                        )
+                    }
+                    else{
+                        Log.i("MainActivity", "Connecting to BleService")
+                    }
 
 
                 }
@@ -145,6 +192,13 @@ class MainActivity : ComponentActivity() {
             }
 
 
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isServiceBound){
+            unbindService(serviceConnection)
         }
     }
 }
