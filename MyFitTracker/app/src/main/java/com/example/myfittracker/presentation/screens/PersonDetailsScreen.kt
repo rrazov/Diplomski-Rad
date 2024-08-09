@@ -13,14 +13,7 @@ import com.example.myfittracker.presentation.viewmodel.ViewModelManager
 @Composable
 fun PersonDetailsScreen(
     macAddress: String,
-    //sharedViewModel: SharedDevicesScreenViewModel,
-    //viewModel: PersonViewModel
 ) {
-    //Log.d("PersonDetailsScreen", "Received macAddress: $macAddress")
-    //val deviceName = sharedViewModel.discoveredDevicesMap.value?.get(macAddress) ?: "Unknown Device"
-
-    // ... Logic to fetch and display data for the device with the given macAddress ...
-
     val viewModel = ViewModelManager.getViewModel(macAddress)
 
     Column {
@@ -28,17 +21,6 @@ fun PersonDetailsScreen(
         Text("Temperature: ${viewModel?.temperature?.observeAsState()?.value ?: "Loading..."}")
         Text("Heart Rate: ${viewModel?.heartRate?.observeAsState()?.value ?: "Loading..."}")
     }
-//    Column (
-//        modifier = Modifier
-//            .padding(20.dp)
-//    ){
-//        Text(
-//            deviceName,
-//            fontSize = 24.sp,
-//            fontWeight = FontWeight.Bold
-//        )
-//        // ... Display fetched data here ...
-//    }
 }
 
 @Preview(
@@ -46,7 +28,7 @@ fun PersonDetailsScreen(
     showSystemUi = true
 )
 @Composable
-private fun PersonDetailsScreenPreview () {
+private fun PersonDetailsScreenPreview() {
 //    val previewViewModel: SharedDevicesScreenViewModel = viewModel()
 //
 //    previewViewModel.updateDeviceName("1", "Roko")

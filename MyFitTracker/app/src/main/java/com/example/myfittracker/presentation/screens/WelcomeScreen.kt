@@ -117,7 +117,7 @@ fun CenteredText() {
 @Composable
 fun StartupInfoDialog(
     onConfirmButtonClick: () -> Unit
-){
+) {
     AlertDialog(
         onDismissRequest = { /*TODO*/ },
         confirmButton = {

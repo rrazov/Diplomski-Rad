@@ -106,18 +106,7 @@ class BleService : Service() {
                         }
                     }
                 }, 5)
-//                CoroutineScope(Dispatchers.IO).launch {
-//                    delay(5000) /// To ensure that scan is finished
-//                    isScanning = false;
-//                    /// Start the process once devices are discovered
-//                    if (currentDevices.isNotEmpty()) {
-//                        /// Start the cycle if not already started
-//                        if (!isProcessing) {
-//                            isProcessing = true
-//                            processDevices()
-//                        }
-//                    }
-//                }
+
                 Log.i("BleService", "Scan started")
                 CoroutineScope(Dispatchers.IO).launch {
                     delay(5000)
@@ -181,8 +170,7 @@ class BleService : Service() {
     }
 
     fun fetchDataFromDevice(
-        device: ScanDeviceBean,
-        //callback: (String?) -> Unit
+        device: ScanDeviceBean
     ) {
         YCBTClient.getRealTemp(object : BleDataResponse {
             override fun onDataResponse(i: Int, v: Float, hashMap: HashMap<*, *>) {
@@ -192,8 +180,6 @@ class BleService : Service() {
                         "BleService",
                         "Fetched data from device: ${device.deviceName}, Temp: $temp"
                     )
-                    //temperatureData.postValue(temp) /// Update LiveData with the fetched temperature
-                    //callback(temp)
                     Handler(Looper.getMainLooper()).post {
                         val viewModel = ViewModelManager.getViewModel(device.deviceMac)
                         viewModel?.updateTemperature(temp)
