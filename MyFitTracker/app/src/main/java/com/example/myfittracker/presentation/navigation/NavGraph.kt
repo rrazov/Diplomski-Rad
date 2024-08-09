@@ -1,5 +1,6 @@
 package com.example.myfittracker.presentation.navigation
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -20,7 +21,8 @@ import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewMo
 fun AppNavigation(
     navController: NavHostController = rememberNavController(),
     bleService: BleService,
-    sharedDevicesScreenViewModel: SharedDevicesScreenViewModel
+    sharedDevicesScreenViewModel: SharedDevicesScreenViewModel,
+    innerPadding: PaddingValues
 )
 {
     // Get ViewModel instance
@@ -49,7 +51,11 @@ fun AppNavigation(
             val macAddress = backStackEntry.arguments?.getString("macAddress") ?: ""
             //val bleService = BleService()
             //val viewModel: PersonViewModel = viewModel(factory = PersonViewModelFactory(macAddress, "", bleService))
-            PersonDetailsScreen(macAddress)
+            PersonDetailsScreen(
+                macAddress,
+                sharedDevicesScreenViewModel,
+                innerPadding,
+            )
         }
 
     }

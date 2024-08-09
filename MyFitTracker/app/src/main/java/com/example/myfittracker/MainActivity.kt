@@ -94,7 +94,6 @@ class MainActivity : ComponentActivity() {
         //val bleService = (application as MyApplication).bleService
 
 
-
         enableEdgeToEdge()
         setContent {
             MyFitTrackerTheme {
@@ -102,10 +101,10 @@ class MainActivity : ComponentActivity() {
                     if (isServiceBound) {
                         AppNavigation(
                             bleService = bleService!!,
-                            sharedDevicesScreenViewModel = sharedDevicesScreenViewModel
+                            sharedDevicesScreenViewModel = sharedDevicesScreenViewModel,
+                            innerPadding = innerPadding
                         )
-                    }
-                    else{
+                    } else{
                         Log.i("MainActivity", "Connecting to BleService")
                     }
 
