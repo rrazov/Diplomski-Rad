@@ -28,6 +28,10 @@ open class PersonViewModel(
         _temperature.value = newTemperature
     }
 
+    fun updateHearthRate(newHearthRate: Int?) {
+        _heartRate.value = newHearthRate
+    }
+
     open fun setTemperature(temperature: String?) {
         _temperature.value = temperature
 
