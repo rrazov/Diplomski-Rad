@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,14 +25,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            FitnessDashboard()
-        }
-    }
-}
+//class MainActivity : ComponentActivity() {
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        setContent {
+//            FitnessDashboard()
+//        }
+//    }
+//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,27 +85,94 @@ fun FitnessParameters() {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        FitnessParameterCard("Heart Rate", "72 BPM")
-        FitnessParameterCard("Steps", "10,000")
-        FitnessParameterCard("SPO2", "98%")
-        FitnessParameterCard("Calories", "500 kcal")
+        FitnessParameterCard(
+            "Heart Rate",
+            "72 BPM"
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Favorite,
+                contentDescription = null,
+                tint = Color.Red,
+                modifier = Modifier.size(100.dp)
+            )
+        }
+        FitnessParameterCard(
+            "Steps",
+            "10,000"
+        ){
+            Icon(
+                imageVector = Icons.Default.Home,
+                contentDescription = null,
+                tint = Color.Green,
+                modifier = Modifier.size(40.dp)
+            )
+        }
+        FitnessParameterCard(
+            "SPO2",
+            "98%"
+        ){
+            Icon(
+                imageVector = Icons.Default.Home,
+                contentDescription = null,
+                tint = Color.Green,
+                modifier = Modifier.size(40.dp)
+            )
+        }
+        FitnessParameterCard(
+            "Calories",
+            "500 kcal"
+        ){
+            Icon(
+                imageVector = Icons.Rounded.Favorite,
+                contentDescription = null,
+                tint = Color.Red,
+                modifier = Modifier.size(100.dp)
+            )
+        }
     }
 }
 
+//@Composable
+//fun FitnessParameterCard(title: String, value: String) {
+//    Column(
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Canvas(
+//            modifier = Modifier
+//                .size(80.dp)
+//                .background(Color.LightGray, CircleShape)
+//        ) {
+//            drawCircle(
+//                color = Color.Blue,
+//                style = Stroke(width = 8f)
+//            )
+//        }
+//        Spacer(modifier = Modifier.height(8.dp))
+//        Text(text = title, fontWeight = FontWeight.Bold)
+//        Text(text = value, fontSize = 20.sp)
+//    }
+//}
 @Composable
-fun FitnessParameterCard(title: String, value: String) {
+fun FitnessParameterCard(title: String, value: String, icon: @Composable () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Canvas(
+        Box(
             modifier = Modifier
                 .size(80.dp)
-                .background(Color.LightGray, CircleShape)
+                .background(Color.LightGray, CircleShape),
+            contentAlignment = Alignment.Center
         ) {
-            drawCircle(
-                color = Color.Blue,
-                style = Stroke(width = 8f)
-            )
+            Canvas(
+                modifier = Modifier.matchParentSize()
+            ) {
+                drawCircle(
+                    color = Color.Blue,
+                    style = Stroke(width = 8f)
+                )
+            }
+            // Place the icon inside the circle
+            icon()
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = title, fontWeight = FontWeight.Bold)
@@ -132,9 +200,9 @@ fun HeartRateGraph() {
     val heartRateData = listOf(72, 75, 78, 77, 74, 73, 76, 79, 81, 78)
 
     Canvas(modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp)
-            .background(Color.LightGray)
+        .fillMaxWidth()
+        .height(150.dp)
+        .background(Color.LightGray)
     ) {
         val maxY = size.height
         val maxX = size.width
