@@ -1,5 +1,6 @@
 package com.example.myfittracker.presentation.screens
 
+import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,6 +31,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewModel
 import com.example.myfittracker.presentation.viewmodel.ViewModelManager
 import com.example.myfittracker.R
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 //class MainActivity : ComponentActivity() {
 //    override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,7 +118,7 @@ fun FitnessParameters(
     ) {
         FitnessParameterCard(
             "Heart Rate",
-            "${heartRate ?: "..."}\" BPM"
+            "${heartRate ?: "..."} BPM"
         ) {
             Icon(
                 imageVector = Icons.Rounded.Favorite,
@@ -223,10 +227,12 @@ fun FitnessParameterCard(title: String, value: String, icon: @Composable () -> U
 
 @Composable
 fun FitnessGraphs(heartRateGraphData: List<Int>) {
+    val timestamps = generateTtimestamps(heartRateGraphData.size)
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Heart Rate Graph", fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        HeartRateGraph(heartRateGraphData)
+        HeartRateGraph(heartRateGraphData, timestamps)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -236,14 +242,89 @@ fun FitnessGraphs(heartRateGraphData: List<Int>) {
     }
 }
 
+fun generateTtimestamps(count: Int): List<String> {
+    val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val timestamps = mutableListOf<String>()
+
+    // Start from the current time
+    val calendar = Calendar.getInstance()
+
+    for (i in 0 until count) {
+        timestamps.add(format.format(Date(calendar.timeInMillis)))
+        calendar.add(Calendar.MINUTE, 1) // Increment by 1 minute
+    }
+
+    return timestamps
+}
+
+//@Composable
+//fun HeartRateGraph(heartRateGraphData: List<Int>) {
+//    //val heartRateData = listOf(72, 75, 78, 77, 74, 73, 76, 79, 81, 78)
+//    if (heartRateGraphData.isEmpty()) {
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(150.dp)
+//                .background(Color.LightGray),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Text("No Heart Rate Data", color = Color.DarkGray)
+//        }
+//    } else {
+//        Canvas(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(150.dp)
+//                .background(Color.LightGray)
+//        ) {
+//            val maxY = size.height
+//            val maxX = size.width
+//            val stepX = maxX / (heartRateGraphData.size - 1)
+//            val stepY = maxY / (heartRateGraphData.maxOrNull()?.toFloat() ?: 1f)
+//
+//            val path = Path().apply {
+//                moveTo(0f, maxY - heartRateGraphData[0] * stepY)
+//                for (i in 1 until heartRateGraphData.size) {
+//                    lineTo(i * stepX, maxY - heartRateGraphData[i] * stepY)
+//                }
+//            }
+//
+//            // Draw the graph line
+//            drawPath(
+//                path = path,
+//                color = Color.Blue,
+//                style = Stroke(width = 4f)
+//            )
+//
+//            // Draw the data points and labels
+//            for (i in heartRateGraphData.indices) {
+//                val x = i * stepX
+//                val y = maxY - heartRateGraphData[i] * stepY
+//                drawCircle(
+//                    Color.Red,
+//                    radius = 5f,
+//                    center = androidx.compose.ui.geometry.Offset(x, y)
+//                )
+//                drawContext.canvas.nativeCanvas.drawText(
+//                    heartRateGraphData[i].toString(),
+//                    x,
+//                    y - 10,
+//                    android.graphics.Paint().apply {
+//                        color = android.graphics.Color.BLACK
+//                        textSize = 24f
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
 @Composable
-fun HeartRateGraph(heartRateGraphData: List<Int>) {
-    //val heartRateData = listOf(72, 75, 78, 77, 74, 73, 76, 79, 81, 78)
-    if (heartRateGraphData.isEmpty()) {
+fun HeartRateGraph(heartRateGraphData: List<Int>, timestamps: List<String>) {
+    if (heartRateGraphData.isEmpty() || timestamps.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp)
+                .height(200.dp)
                 .background(Color.LightGray),
             contentAlignment = Alignment.Center
         ) {
@@ -253,12 +334,16 @@ fun HeartRateGraph(heartRateGraphData: List<Int>) {
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(150.dp)
-                .background(Color.LightGray)
+                .height(200.dp)
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(Color.LightGray, Color.White)
+                    )
+                )
         ) {
-            val maxY = size.height
+            val maxY = size.height - 50.dp.toPx()  // Reserve space for timestamps
             val maxX = size.width
-            val stepX = maxX / (heartRateGraphData.size - 1)
+            val stepX = maxX / (heartRateGraphData.size - 1).coerceAtLeast(1)
             val stepY = maxY / (heartRateGraphData.maxOrNull()?.toFloat() ?: 1f)
 
             val path = Path().apply {
@@ -268,11 +353,11 @@ fun HeartRateGraph(heartRateGraphData: List<Int>) {
                 }
             }
 
-            // Draw the graph line
+            // Draw the graph line with a smoother stroke
             drawPath(
                 path = path,
-                color = Color.Blue,
-                style = Stroke(width = 4f)
+                color = Color(0xFF3A86FF),
+                style = Stroke(width = 6f)
             )
 
             // Draw the data points and labels
@@ -281,16 +366,31 @@ fun HeartRateGraph(heartRateGraphData: List<Int>) {
                 val y = maxY - heartRateGraphData[i] * stepY
                 drawCircle(
                     Color.Red,
-                    radius = 5f,
+                    radius = 8f,
                     center = androidx.compose.ui.geometry.Offset(x, y)
                 )
+
+                // Draw the heart rate value above the point
                 drawContext.canvas.nativeCanvas.drawText(
                     heartRateGraphData[i].toString(),
                     x,
-                    y - 10,
+                    y - 15,
                     android.graphics.Paint().apply {
                         color = android.graphics.Color.BLACK
+                        textSize = 28f
+                        textAlign = android.graphics.Paint.Align.CENTER
+                    }
+                )
+
+                // Draw the timestamp below the point
+                drawContext.canvas.nativeCanvas.drawText(
+                    timestamps[i],
+                    x,
+                    size.height - 10.dp.toPx(),
+                    android.graphics.Paint().apply {
+                        color = android.graphics.Color.DKGRAY
                         textSize = 24f
+                        textAlign = android.graphics.Paint.Align.CENTER
                     }
                 )
             }
