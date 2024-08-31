@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myfittracker.domain.services.BleService
+import com.example.myfittracker.presentation.screens.FitnessDashboard
 import com.example.myfittracker.presentation.screens.ListOfPeopleScreen
 import com.example.myfittracker.presentation.screens.ScanDevicesScreen
 import com.example.myfittracker.presentation.screens.WelcomeScreen
@@ -55,6 +56,15 @@ fun AppNavigation(
                 macAddress,
                 sharedDevicesScreenViewModel,
                 innerPadding,
+            )
+        }
+        composable(Screens.FitnessDashboardScreen.route) { backStackEntry ->
+            val macAddress = backStackEntry.arguments?.getString("macAddress") ?: ""
+            //val bleService = BleService()
+            //val viewModel: PersonViewModel = viewModel(factory = PersonViewModelFactory(macAddress, "", bleService))
+            FitnessDashboard(
+                macAddress = macAddress,
+                sharedDevicesScreenViewModel = sharedDevicesScreenViewModel
             )
         }
 

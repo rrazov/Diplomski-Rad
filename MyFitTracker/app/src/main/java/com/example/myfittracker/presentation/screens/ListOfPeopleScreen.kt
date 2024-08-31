@@ -40,7 +40,8 @@ fun ListOfPeopleScreen(
                 macAddress = entry.key,
                 modifier = Modifier.fillMaxWidth()
             ) { macAddress ->
-                navController.navigate("person_details_screen/$macAddress")
+                //navController.navigate("person_details_screen/$macAddress")
+                navController.navigate("fitness_dashboard_screen/$macAddress")
             }
 
         }

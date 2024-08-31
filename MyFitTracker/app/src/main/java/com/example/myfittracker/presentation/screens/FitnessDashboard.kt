@@ -14,16 +14,21 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewModel
+import com.example.myfittracker.presentation.viewmodel.ViewModelManager
+import com.example.myfittracker.R
 
 //class MainActivity : ComponentActivity() {
 //    override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,11 +41,20 @@ import androidx.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FitnessDashboard() {
+fun FitnessDashboard(
+    macAddress: String,
+    sharedDevicesScreenViewModel: SharedDevicesScreenViewModel,
+) {
+//    val viewModel = ViewModelManager.getViewModel(macAddress)
+
+    val deviceName = sharedDevicesScreenViewModel
+        .discoveredDevicesMap
+        .observeAsState().value?.get(macAddress) ?: ""
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Fitness Dashboard") }
+                title = { Text("Fitness Dashboard : $deviceName") }
             )
         },
         bottomBar = {
@@ -72,7 +86,7 @@ fun FitnessDashboard() {
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            FitnessParameters()
+            FitnessParameters(macAddress)
             Spacer(modifier = Modifier.height(16.dp))
             FitnessGraphs()
         }
@@ -80,14 +94,19 @@ fun FitnessDashboard() {
 }
 
 @Composable
-fun FitnessParameters() {
+fun FitnessParameters(
+    macAddress: String
+) {
+
+    val viewModel = ViewModelManager.getViewModel(macAddress)
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         FitnessParameterCard(
             "Heart Rate",
-            "72 BPM"
+            "${viewModel?.heartRate?.observeAsState()?.value ?: "..."}\" BPM"
         ) {
             Icon(
                 imageVector = Icons.Rounded.Favorite,
@@ -97,24 +116,37 @@ fun FitnessParameters() {
             )
         }
         FitnessParameterCard(
-            "Steps",
-            "10,000"
-        ){
+            "Temperature",
+            "${viewModel?.temperature?.observeAsState()?.value ?: "..."}"
+        ) {
             Icon(
-                imageVector = Icons.Default.Home,
+                //imageVector = Icons.Rounded.,
+                painter = painterResource(id = R.drawable.thermometer_24dp_ff6a00_fill1_wght400_grad0_opsz24),
                 contentDescription = null,
                 tint = Color.Green,
                 modifier = Modifier.size(40.dp)
             )
         }
+//        FitnessParameterCard(
+//            "Steps",
+//            "10,000"
+//        ) {
+//            Icon(
+//                imageVector = Icons.Default.Home,
+//                contentDescription = null,
+//                tint = Color.Green,
+//                modifier = Modifier.size(40.dp)
+//            )
+//        }
         FitnessParameterCard(
             "SPO2",
             "98%"
         ){
             Icon(
-                imageVector = Icons.Default.Home,
+                //imageVector = Icons.Default.Home,
+                painter = painterResource(id = R.drawable.spo2_24dp_ff6a00_fill1_wght400_grad0_opsz24),
                 contentDescription = null,
-                tint = Color.Green,
+                tint = Color(0xFF0BE1D1),
                 modifier = Modifier.size(40.dp)
             )
         }
@@ -123,9 +155,10 @@ fun FitnessParameters() {
             "500 kcal"
         ){
             Icon(
-                imageVector = Icons.Rounded.Favorite,
+                //imageVector = Icons.Rounded.Favorite,
+                painter = painterResource(id = R.drawable.local_fire_department_24dp_ff6a00_fill1_wght400_grad0_opsz24),
                 contentDescription = null,
-                tint = Color.Red,
+                tint = Color(0xFFF18027),
                 modifier = Modifier.size(100.dp)
             )
         }
@@ -159,7 +192,7 @@ fun FitnessParameterCard(title: String, value: String, icon: @Composable () -> U
     ) {
         Box(
             modifier = Modifier
-                .size(80.dp)
+                .size(55.dp)
                 .background(Color.LightGray, CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -168,7 +201,7 @@ fun FitnessParameterCard(title: String, value: String, icon: @Composable () -> U
             ) {
                 drawCircle(
                     color = Color.Blue,
-                    style = Stroke(width = 8f)
+                    style = Stroke(width = 4f)
                 )
             }
             // Place the icon inside the circle
@@ -282,7 +315,10 @@ fun StepCountGraph() {
 @Preview(showBackground = true)
 @Composable
 fun FitnessDashboardPreview() {
-    FitnessDashboard()
+    FitnessDashboard(
+        "#$#$#SDDADADA",
+        sharedDevicesScreenViewModel = SharedDevicesScreenViewModel()
+    )
 }
 
 
