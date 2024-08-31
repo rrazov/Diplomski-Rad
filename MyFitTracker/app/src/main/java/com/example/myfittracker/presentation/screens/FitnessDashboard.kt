@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,13 +40,16 @@ import com.example.myfittracker.R
 //    }
 //}
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FitnessDashboard(
     macAddress: String,
     sharedDevicesScreenViewModel: SharedDevicesScreenViewModel,
 ) {
-//    val viewModel = ViewModelManager.getViewModel(macAddress)
+    val viewModel = ViewModelManager.getViewModel(macAddress)
+    val heartRateGraphData = viewModel?.heartRateGraphData?.observeAsState(emptyList())?.value
 
     val deviceName = sharedDevicesScreenViewModel
         .discoveredDevicesMap
@@ -88,7 +92,7 @@ fun FitnessDashboard(
         ) {
             FitnessParameters(macAddress)
             Spacer(modifier = Modifier.height(16.dp))
-            FitnessGraphs()
+            FitnessGraphs(heartRateGraphData ?: emptyList())
         }
     }
 }
@@ -100,13 +104,17 @@ fun FitnessParameters(
 
     val viewModel = ViewModelManager.getViewModel(macAddress)
 
+    val heartRate = viewModel?.heartRate?.observeAsState()?.value
+    val temperature = viewModel?.temperature?.observeAsState()?.value
+
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         FitnessParameterCard(
             "Heart Rate",
-            "${viewModel?.heartRate?.observeAsState()?.value ?: "..."}\" BPM"
+            "${heartRate ?: "..."}\" BPM"
         ) {
             Icon(
                 imageVector = Icons.Rounded.Favorite,
@@ -117,7 +125,7 @@ fun FitnessParameters(
         }
         FitnessParameterCard(
             "Temperature",
-            "${viewModel?.temperature?.observeAsState()?.value ?: "..."}"
+            temperature ?: "..."
         ) {
             Icon(
                 //imageVector = Icons.Rounded.,
@@ -214,11 +222,11 @@ fun FitnessParameterCard(title: String, value: String, icon: @Composable () -> U
 }
 
 @Composable
-fun FitnessGraphs() {
+fun FitnessGraphs(heartRateGraphData: List<Int>) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Heart Rate Graph", fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        HeartRateGraph()
+        HeartRateGraph(heartRateGraphData)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -229,47 +237,63 @@ fun FitnessGraphs() {
 }
 
 @Composable
-fun HeartRateGraph() {
-    val heartRateData = listOf(72, 75, 78, 77, 74, 73, 76, 79, 81, 78)
-
-    Canvas(modifier = Modifier
-        .fillMaxWidth()
-        .height(150.dp)
-        .background(Color.LightGray)
-    ) {
-        val maxY = size.height
-        val maxX = size.width
-        val stepX = maxX / (heartRateData.size - 1)
-        val stepY = maxY / (heartRateData.maxOrNull()?.toFloat() ?: 1f)
-
-        val path = Path().apply {
-            moveTo(0f, maxY - heartRateData[0] * stepY)
-            for (i in 1 until heartRateData.size) {
-                lineTo(i * stepX, maxY - heartRateData[i] * stepY)
-            }
+fun HeartRateGraph(heartRateGraphData: List<Int>) {
+    //val heartRateData = listOf(72, 75, 78, 77, 74, 73, 76, 79, 81, 78)
+    if (heartRateGraphData.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .background(Color.LightGray),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No Heart Rate Data", color = Color.DarkGray)
         }
+    } else {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .background(Color.LightGray)
+        ) {
+            val maxY = size.height
+            val maxX = size.width
+            val stepX = maxX / (heartRateGraphData.size - 1)
+            val stepY = maxY / (heartRateGraphData.maxOrNull()?.toFloat() ?: 1f)
 
-        // Draw the graph line
-        drawPath(
-            path = path,
-            color = Color.Blue,
-            style = Stroke(width = 4f)
-        )
-
-        // Draw the data points and labels
-        for (i in heartRateData.indices) {
-            val x = i * stepX
-            val y = maxY - heartRateData[i] * stepY
-            drawCircle(Color.Red, radius = 5f, center = androidx.compose.ui.geometry.Offset(x, y))
-            drawContext.canvas.nativeCanvas.drawText(
-                heartRateData[i].toString(),
-                x,
-                y - 10,
-                android.graphics.Paint().apply {
-                    color = android.graphics.Color.BLACK
-                    textSize = 24f
+            val path = Path().apply {
+                moveTo(0f, maxY - heartRateGraphData[0] * stepY)
+                for (i in 1 until heartRateGraphData.size) {
+                    lineTo(i * stepX, maxY - heartRateGraphData[i] * stepY)
                 }
+            }
+
+            // Draw the graph line
+            drawPath(
+                path = path,
+                color = Color.Blue,
+                style = Stroke(width = 4f)
             )
+
+            // Draw the data points and labels
+            for (i in heartRateGraphData.indices) {
+                val x = i * stepX
+                val y = maxY - heartRateGraphData[i] * stepY
+                drawCircle(
+                    Color.Red,
+                    radius = 5f,
+                    center = androidx.compose.ui.geometry.Offset(x, y)
+                )
+                drawContext.canvas.nativeCanvas.drawText(
+                    heartRateGraphData[i].toString(),
+                    x,
+                    y - 10,
+                    android.graphics.Paint().apply {
+                        color = android.graphics.Color.BLACK
+                        textSize = 24f
+                    }
+                )
+            }
         }
     }
 }
