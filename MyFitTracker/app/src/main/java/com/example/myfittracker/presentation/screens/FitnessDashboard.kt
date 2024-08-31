@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -88,16 +89,32 @@ fun FitnessDashboard(
             }
         }
     ) { innerPadding ->
-        Column(
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(innerPadding)
+//                .padding(16.dp)
+//        ) {
+//            FitnessParameters(macAddress)
+//            Spacer(modifier = Modifier.height(16.dp))
+//            FitnessGraphs(heartRateGraphData ?: emptyList())
+//        }
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(16.dp),
+            contentPadding = PaddingValues(bottom = 16.dp) // Optional: to add some padding at the end
         ) {
-            FitnessParameters(macAddress)
-            Spacer(modifier = Modifier.height(16.dp))
-            FitnessGraphs(heartRateGraphData ?: emptyList())
+            item {
+                FitnessParameters(macAddress)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            item {
+                FitnessGraphs(heartRateGraphData ?: emptyList())
+            }
         }
+
     }
 }
 
@@ -234,7 +251,7 @@ fun FitnessGraphs(heartRateGraphData: List<Int>) {
         Spacer(modifier = Modifier.height(8.dp))
         HeartRateGraph(heartRateGraphData, timestamps)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(35.dp))
 
         Text("Step Count Graph", fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
@@ -436,7 +453,10 @@ fun StepCountGraph() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true,
+    showSystemUi = true
+)
 @Composable
 fun FitnessDashboardPreview() {
     FitnessDashboard(
