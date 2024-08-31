@@ -13,35 +13,64 @@ open class PersonViewModel(
     //val name: String,
     //private val bleService: BleService
 ) : ViewModel() {
+
+    var firstFetch = true;
+    private var sizeOfHeartHasMap: Int? = null
+    var heartStartTime: String? = null
+
     private val _temperature = MutableLiveData<String?>(null)
     val temperature: MutableLiveData<String?> = _temperature
 
     private val _heartRate = MutableLiveData<Int?>(null)
     val heartRate: MutableLiveData<Int?> = _heartRate
 
+    private val _bloodDBP = MutableLiveData<Int?>(null)
+    val bloodDBP: MutableLiveData<Int?> = _bloodDBP
+
+    private val _bloodSBP = MutableLiveData<Int?>(null)
+    val bloodSBP: MutableLiveData<Int?> = _bloodSBP
+
     private val _heartRateGraphData = MutableLiveData<List<Int>>(mutableListOf())
     val heartRateGraphData: LiveData<List<Int>> = _heartRateGraphData
-
-//    init {
-//        viewModelScope.launch {
-//            fetchTemperature()
-//        }
-//    }
 
 
     fun updateTemperature(newTemperature: String?) {
         _temperature.value = newTemperature
     }
 
-    fun updateHearthRate(newHearthRate: Int?) {
-        _heartRate.value = newHearthRate
-        newHearthRate?.let { rate ->
-           val updatedList = _heartRateGraphData.value.orEmpty().toMutableList().apply {
-                add(rate)
-                if (size > 20) removeAt(0)
+    fun updateHearthRate(newHearthRate: Int?, hashMapSize: Int?, startTimestamp: String?) {
+        if (firstFetch) {
+            sizeOfHeartHasMap = hashMapSize
+            firstFetch = false
+
+            _heartRate.value = newHearthRate
+            heartStartTime = startTimestamp
+            newHearthRate?.let { rate ->
+                val updatedList = _heartRateGraphData.value.orEmpty().toMutableList().apply {
+                    add(rate)
+                    if (size > 20) removeAt(0)
+                }
+                _heartRateGraphData.value = updatedList
             }
-            _heartRateGraphData.value = updatedList
+        } else {
+            val hearthSize = hashMapSize
+            if (hearthSize != sizeOfHeartHasMap) {
+                _heartRate.value = newHearthRate
+                newHearthRate?.let { rate ->
+                    val updatedList = _heartRateGraphData.value.orEmpty().toMutableList().apply {
+                        add(rate)
+                        if (size > 20) removeAt(0)
+                    }
+                    _heartRateGraphData.value = updatedList
+                }
+                sizeOfHeartHasMap = hashMapSize
+            }
         }
+    }
+
+    fun updateBloodPressure(newBloodDBP: Int?, newBloodSPB: Int?){
+        _bloodDBP.value = newBloodDBP
+        _bloodSBP.value = newBloodSPB
     }
 
     open fun setTemperature(temperature: String?) {

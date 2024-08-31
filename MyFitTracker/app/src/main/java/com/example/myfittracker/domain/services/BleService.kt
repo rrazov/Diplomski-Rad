@@ -201,19 +201,16 @@ class BleService : Service() {
             }
         })
 
-//        YCBTClient.settingBloodOxygenModeMonitor(true, 1, object : BleDataResponse{
-//            override fun onDataResponse(p0: Int, p1: Float, hashMap: HashMap<*, *>?) {
-//                if (hashMap != null) {
-//                    for ((key, value) in hashMap) {
-//                        Log.d("Ble", "BloodOxygen turnec on")
-//                        Log.d("bleService", "Key: $key, Value: $value")
-//                    }
-//                }
-//                else{
-//                    Log.d("BleService", "hashMap is null")
-//                }
-//            }
-//        })
+        YCBTClient.settingBloodOxygenModeMonitor(false, 1, object : BleDataResponse{
+            override fun onDataResponse(p0: Int, p1: Float, hashMap: HashMap<*, *>?) {
+                if (hashMap != null) {
+                    for ((key, value) in hashMap) {
+                        Log.d("Ble", "BloodOxygen turned on")
+                        Log.d("bleService", "Key: $key, Value: $value")
+                    }
+                }
+            }
+        })
         // DBIVAN 0 ZA VRIJEDNOSTI
 //        YCBTClient.getNowStep(object : BleDataResponse{
 //            override fun onDataResponse(p0: Int, p1: Float, hashMap: HashMap<*, *>?) {
@@ -248,20 +245,43 @@ class BleService : Service() {
 //            }
 //        })
 
+        YCBTClient.healthHistoryData(Constants.DATATYPE.Health_HistoryBlood, object : BleDataResponse{
+                override fun onDataResponse(i: Int, v: Float, hashMap: HashMap<*, *>?) {
+                    if (hashMap != null) {
+
+                        val lists = hashMap["data"] as ArrayList<HashMap<*, *>>
+                        var lastBloodDBP : Int? = null
+                        var lastBloodSBP : Int? = null
+
+                        //Log.d("BleService", "Key: $key, Value: $value")
+                        for (map in lists) {
+                            lastBloodDBP = map["bloodDBP"] as? Int
+                            lastBloodSBP = map["bloodSBP"] as? Int
+//                            val StartTime = map["bloodStartTime"] as? Long
+//                            val EndTime = map["bloodEndTime"] as? Long
+//                            val dateFormat =
+//                                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+//                            val formattedStartTime = StartTime?.let { dateFormat.format(Date(it)) }
+//                            val formattedEndTime = EndTime?.let { dateFormat.format(Date(it)) }
+
+//                            Log.d("BleService", "sportStartTime: $formattedStartTime")
+//                            Log.d("BleService", "heartValue: $lastBloodDBP")
+//                            Log.d("BleService", "heartValue: $lastBloodSBP")
+                        }
+                        Handler(Looper.getMainLooper()).post {
+                            val viewModel = ViewModelManager.getViewModel(device.deviceMac)
+                            viewModel?.updateBloodPressure(lastBloodDBP, lastBloodSBP)
+                        }
+
+                    }
+                }
+            })
+
         YCBTClient.healthHistoryData(Constants.DATATYPE.Health_HistoryHeart, object : BleDataResponse {
                 override fun onDataResponse(i: Int, v: Float, hashMap: HashMap<*, *>){
                     if (hashMap != null) {
 
-                        var lastHeartValue: String? = null
-
-//                        for ((key, value) in hashMap) {
-//                            if (key == "heartValue") {
-//                                lastHeartValue = value as? String
-//                            }
-//                        }
-
-
-                        Log.d("BleService", "heartValue = $lastHeartValue")
+//                        Log.d("BleService", "heartValue = $lastHeartValue")
 
 
 //                        for ((key, value) in hashMap){
@@ -269,32 +289,33 @@ class BleService : Service() {
 //                        }
                         val lists = hashMap["data"] as ArrayList<HashMap<*, *>>
                         var heartValue : Int? = null
+                        var counter = 0
+                        var formattedStartTime: String? = null
 
                         for (map in lists) {
 
                              heartValue = map["heartValue"] as? Int
                             val StartTime = map["heartStartTime"] as? Long
-                            val EndTime = map["heartEndTime"] as? Long
                             val dateFormat =
                                 SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                            val formattedStartTime = StartTime?.let { dateFormat.format(Date(it)) }
-                            val formattedEndTime = EndTime?.let { dateFormat.format(Date(it)) }
+                            formattedStartTime = StartTime?.let { dateFormat.format(Date(it)) }
+//                            val formattedEndTime = EndTime?.let { dateFormat.format(Date(it)) }
 //                            //
 //                            //                        val sportStep = map["sportStep"] as? Int
 //                            //                        val sportDistance = map["sportDistance"] as? Int
 //                            //                        val sportCalorie = map["sportCalorie"] as? Int
 //                            //
                             Log.d("BleService", "sportStartTime: $formattedStartTime")
-                            Log.d("BleService", "sportEndTime: $formattedEndTime")
                             Log.d("BleService", "heartValue: $heartValue")
                             //                        Log.d("BleService", "sportStep: $sportStep")
                             //                        Log.d("BleService", "sportDistance: $sportDistance")
                             //                        Log.d("BleService", "sportCalorie: $sportCalorie")
+                            counter++
                         }
 
                         Handler(Looper.getMainLooper()).post {
                             val viewModel = ViewModelManager.getViewModel(device.deviceMac)
-                            viewModel?.updateHearthRate(heartValue)
+                            viewModel?.updateHearthRate(heartValue, counter, formattedStartTime)
                         }
                     }
                 }

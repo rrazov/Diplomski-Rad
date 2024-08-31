@@ -111,7 +111,7 @@ fun FitnessDashboard(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             item {
-                FitnessGraphs(heartRateGraphData ?: emptyList())
+                FitnessGraphs(heartRateGraphData ?: emptyList(), macAddress)
             }
         }
 
@@ -127,6 +127,8 @@ fun FitnessParameters(
 
     val heartRate = viewModel?.heartRate?.observeAsState()?.value
     val temperature = viewModel?.temperature?.observeAsState()?.value
+    val bloodDBP = viewModel?.bloodDBP?.observeAsState()?.value
+    val bloodSBP = viewModel?.bloodSBP?.observeAsState()?.value
 
 
     Row(
@@ -141,7 +143,7 @@ fun FitnessParameters(
                 imageVector = Icons.Rounded.Favorite,
                 contentDescription = null,
                 tint = Color.Red,
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(70.dp)
             )
         }
         FitnessParameterCard(
@@ -167,13 +169,25 @@ fun FitnessParameters(
 //                modifier = Modifier.size(40.dp)
 //            )
 //        }
+//        FitnessParameterCard(
+//            "SPO2",
+//            "98%"
+//        ){
+//            Icon(
+//                //imageVector = Icons.Default.Home,
+//                painter = painterResource(id = R.drawable.spo2_24dp_ff6a00_fill1_wght400_grad0_opsz24),
+//                contentDescription = null,
+//                tint = Color(0xFF0BE1D1),
+//                modifier = Modifier.size(40.dp)
+//            )
+//        }
         FitnessParameterCard(
-            "SPO2",
-            "98%"
+            "Blood Press",
+            "$bloodDBP/$bloodSBP" ?: "..."
         ){
             Icon(
                 //imageVector = Icons.Default.Home,
-                painter = painterResource(id = R.drawable.spo2_24dp_ff6a00_fill1_wght400_grad0_opsz24),
+                painter = painterResource(id = R.drawable.blood_pressure_24dp_ff6a00_fill1_wght400_grad0_opsz24),
                 contentDescription = null,
                 tint = Color(0xFF0BE1D1),
                 modifier = Modifier.size(40.dp)
@@ -221,7 +235,7 @@ fun FitnessParameterCard(title: String, value: String, icon: @Composable () -> U
     ) {
         Box(
             modifier = Modifier
-                .size(55.dp)
+                .size(45.dp)
                 .background(Color.LightGray, CircleShape),
             contentAlignment = Alignment.Center
         ) {
@@ -230,7 +244,7 @@ fun FitnessParameterCard(title: String, value: String, icon: @Composable () -> U
             ) {
                 drawCircle(
                     color = Color.Blue,
-                    style = Stroke(width = 4f)
+                    style = Stroke(width = 2f)
                 )
             }
             // Place the icon inside the circle
@@ -243,8 +257,10 @@ fun FitnessParameterCard(title: String, value: String, icon: @Composable () -> U
 }
 
 @Composable
-fun FitnessGraphs(heartRateGraphData: List<Int>) {
-    val timestamps = generateTtimestamps(heartRateGraphData.size)
+fun FitnessGraphs(heartRateGraphData: List<Int>, macAddress: String) {
+    val viewModel = ViewModelManager?.getViewModel(macAddress)
+    val time = viewModel!!.heartStartTime
+    val timestamps = generateTimestamps(heartRateGraphData.size, time)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Heart Rate Graph", fontWeight = FontWeight.Bold)
@@ -259,12 +275,19 @@ fun FitnessGraphs(heartRateGraphData: List<Int>) {
     }
 }
 
-fun generateTtimestamps(count: Int): List<String> {
+fun generateTimestamps(count: Int, startTime: String?): List<String> {
+
+    val startTimeHearth = startTime?.substring(11,16)
     val format = SimpleDateFormat("HH:mm", Locale.getDefault())
     val timestamps = mutableListOf<String>()
 
     // Start from the current time
     val calendar = Calendar.getInstance()
+
+    startTimeHearth?.let {
+        val parsedDate = format.parse(it)
+        calendar.time = parsedDate
+    }
 
     for (i in 0 until count) {
         timestamps.add(format.format(Date(calendar.timeInMillis)))
