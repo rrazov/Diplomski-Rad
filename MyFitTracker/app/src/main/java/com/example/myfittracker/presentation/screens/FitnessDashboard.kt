@@ -71,7 +71,9 @@ fun FitnessDashboard(
                             imageVector = Icons.Rounded.Favorite, // Example icon
                             contentDescription = "Dashboard Icon",
                             tint = Color.White,
-                            modifier = Modifier.size(24.dp).padding(end = 8.dp)
+                            modifier = Modifier
+                                .size(24.dp)
+                                .padding(end = 8.dp)
                         )
                         Text(
                             text = "Fitness Dashboard : $deviceName",
@@ -217,6 +219,8 @@ fun FitnessParameters(
     val temperature = viewModel?.temperature?.observeAsState()?.value
     val bloodDBP = viewModel?.bloodDBP?.observeAsState()?.value
     val bloodSBP = viewModel?.bloodSBP?.observeAsState()?.value
+    val SPO2 = viewModel?.SPO2?.observeAsState()?.value
+    val resiratoryRate = viewModel?.respiratoryRate?.observeAsState()?.value
 
     // Using a grid layout with two columns
     Column {
@@ -232,7 +236,7 @@ fun FitnessParameters(
                 value = "${heartRate ?: "..."} BPM",
                 icon = {
                     Icon(
-                        imageVector = Icons.Rounded.Favorite,
+                        painter = painterResource(id = R.drawable.ecg_heart_24dp_ff6a00_fill1_wght400_grad0_opsz24),
                         contentDescription = null,
                         tint = Color.Red,
                         modifier = Modifier.size(40.dp)
@@ -243,12 +247,12 @@ fun FitnessParameters(
             Spacer(modifier = Modifier.width(4.dp)) // Add a spacer between the cards
             FitnessParameterCard(
                 title = "Temperature",
-                value = temperature ?: "...",
+                value = temperature?.let { "$it℃" } ?: "...",
                 icon = {
                     Icon(
                         painter = painterResource(id = R.drawable.thermometer_24dp_ff6a00_fill1_wght400_grad0_opsz24),
                         contentDescription = null,
-                        tint = Color.Green,
+                        tint = Color(0xFF4CAF50),
                         modifier = Modifier.size(40.dp)
                     )
                 },
@@ -265,12 +269,16 @@ fun FitnessParameters(
         ) {
             FitnessParameterCard(
                 title = "Blood Pressure",
-                value = "$bloodDBP/$bloodSBP" ?: "...",
+                value = if (bloodDBP != null && bloodSBP != null) {
+                    "${bloodDBP}/${bloodSBP}"
+                } else {
+                    "... / ..."
+                },
                 icon = {
                     Icon(
                         painter = painterResource(id = R.drawable.blood_pressure_24dp_ff6a00_fill1_wght400_grad0_opsz24),
                         contentDescription = null,
-                        tint = Color(0xFF0BE1D1),
+                        tint = Color(0xFFD32F2F),
                         modifier = Modifier.size(40.dp)
                     )
                 },
@@ -278,13 +286,35 @@ fun FitnessParameters(
             )
             Spacer(modifier = Modifier.width(4.dp)) // Add a spacer between the cards
             FitnessParameterCard(
-                title = "Calories",
-                value = "500 kcal",
+                title = "SPO2",
+                value = SPO2?.toString()?.let { "$it%" } ?: "....",
                 icon = {
                     Icon(
-                        painter = painterResource(id = R.drawable.local_fire_department_24dp_ff6a00_fill1_wght400_grad0_opsz24),
+                        painter = painterResource(id = R.drawable.spo2_24dp_ff6a00_fill1_wght400_grad0_opsz24),
                         contentDescription = null,
-                        tint = Color(0xFFF18027),
+                        tint = Color(0xFF1976D2),
+                        modifier = Modifier.size(40.dp)
+                    )
+                },
+                modifier = Modifier.weight(1.5f)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                //.padding(horizontal = 2.dp) // Adding some padding to the row
+                .height(180.dp),
+            horizontalArrangement = Arrangement.SpaceBetween // Use SpaceBetween to ensure even spacing
+        ) {
+            FitnessParameterCard(
+                title = "Respiratory Rate",
+                value = resiratoryRate?.toString()?.let { "$it perMin" } ?: "...",
+                icon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.respiratory_rate_24dp_ff6a00_fill1_wght400_grad0_opsz24),
+                        contentDescription = null,
+                        tint = Color(0xFF008080),
                         modifier = Modifier.size(40.dp)
                     )
                 },

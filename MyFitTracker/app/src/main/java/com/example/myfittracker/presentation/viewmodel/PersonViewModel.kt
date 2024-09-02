@@ -30,6 +30,12 @@ open class PersonViewModel(
     private val _bloodSBP = MutableLiveData<Int?>(null)
     val bloodSBP: MutableLiveData<Int?> = _bloodSBP
 
+    private val _SPO2 = MutableLiveData<Int?>(null)
+    val SPO2: MutableLiveData<Int?> = _SPO2
+
+    private val _respiratoryRate = MutableLiveData<Int?>(null)
+    val respiratoryRate: MutableLiveData<Int?> = _respiratoryRate
+
     private val _heartRateGraphData = MutableLiveData<List<Int>>(mutableListOf())
     val heartRateGraphData: LiveData<List<Int>> = _heartRateGraphData
 
@@ -71,6 +77,14 @@ open class PersonViewModel(
     fun updateBloodPressure(newBloodDBP: Int?, newBloodSPB: Int?){
         _bloodDBP.value = newBloodDBP
         _bloodSBP.value = newBloodSPB
+    }
+
+    fun updateSPO2(newSPO2: Int?){
+        _SPO2.value = newSPO2
+    }
+
+    fun updateRespiratoryRate(newRespiratoryRate: Int?){
+        _respiratoryRate.value = newRespiratoryRate
     }
 
     open fun setTemperature(temperature: String?) {
