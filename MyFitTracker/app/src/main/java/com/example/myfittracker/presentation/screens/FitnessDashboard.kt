@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewModel
 import com.example.myfittracker.presentation.viewmodel.ViewModelManager
 import com.example.myfittracker.R
@@ -50,6 +52,7 @@ import java.util.Locale
 @Composable
 fun FitnessDashboard(
     macAddress: String,
+    navController: NavController,
     sharedDevicesScreenViewModel: SharedDevicesScreenViewModel,
 ) {
     val viewModel = ViewModelManager.getViewModel(macAddress)
@@ -68,16 +71,16 @@ fun FitnessDashboard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Favorite, // Example icon
+                            painter = painterResource(id = R.drawable.fitness_center_24dp_ff6a00_fill1_wght400_grad0_opsz24), // Example icon
                             contentDescription = "Dashboard Icon",
-                            tint = Color.White,
+                            tint = Color.Gray,
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(40.dp)
                                 .padding(end = 8.dp)
                         )
                         Text(
                             text = "Fitness Dashboard : $deviceName",
-                            style = MaterialTheme.typography.titleMedium.copy(
+                            style = MaterialTheme.typography.titleLarge.copy(
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold
                             )
@@ -105,25 +108,41 @@ fun FitnessDashboard(
             )
         },
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-                    label = { Text("Home") },
-                    selected = true,
-                    onClick = {}
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.List, contentDescription = "Data") },
-                    label = { Text("Data") },
-                    selected = false,
-                    onClick = {}
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-                    label = { Text("Settings") },
-                    selected = false,
-                    onClick = {}
-                )
+            Box(
+                modifier = Modifier
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFF3A7BD5), Color(0xFF00D2FF))
+                        )
+                    )
+            ) {
+                NavigationBar (
+                    containerColor = Color.Transparent
+                ) {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+                        label = { Text("Home") },
+                        selected = true,
+                        onClick = {}
+                    )
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.groups_24dp_ff6a00_fill1_wght400_grad0_opsz24),
+                                contentDescription = "People"
+                            )
+                        },
+                        label = { Text("Clients") },
+                        selected = false,
+                        onClick = { navController.navigate("list_of_people") }
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
+                        label = { Text("Settings") },
+                        selected = false,
+                        onClick = {}
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -622,6 +641,7 @@ fun FitnessDashboardPreview() {
     FitnessGraphs(mockHeartRateData, "#$#$#SDDADADA")
     FitnessDashboard(
         "#$#$#SDDADADA",
+        navController = rememberNavController(),
         sharedDevicesScreenViewModel = SharedDevicesScreenViewModel()
     )
 }

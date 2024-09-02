@@ -64,6 +64,7 @@ fun AppNavigation(
             //val viewModel: PersonViewModel = viewModel(factory = PersonViewModelFactory(macAddress, "", bleService))
             FitnessDashboard(
                 macAddress = macAddress,
+                navController,
                 sharedDevicesScreenViewModel = sharedDevicesScreenViewModel
             )
         }
