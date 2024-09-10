@@ -1,6 +1,7 @@
 package com.example.myfittracker.presentation.screens
 
 import android.content.Context
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -16,6 +17,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -41,8 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.myfittracker.domain.permissions.PermissionHandl
+import com.example.myfittracker.domain.permissions.PermissionHandle
 import kotlinx.coroutines.delay
+import com.example.myfittracker.R
 
 
 //@Composable
@@ -164,15 +168,20 @@ fun WelcomeScreen(
     var showCenteredText by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(true) }
     var acknowledgedButtonPressed by remember { mutableStateOf(false) }
-    val permissionHandl = remember {
-        PermissionHandl(ctx)
+    val permissionHandle = remember {
+        PermissionHandle(ctx)
     }
     var shouldNavigateToScanDevice by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        permissionHandl.handlePermissionsResult(permissions)
+        permissions.forEach { (permission, isGranted) ->
+            Log.d("WelcomeScreen", "Permission $permission granted: $isGranted")
+        }
+
+        permissionHandle.handlePermissionsResult(permissions)
+
     }
 
     Box(
@@ -207,16 +216,49 @@ fun WelcomeScreen(
         }
     }
 
+//    if (acknowledgedButtonPressed) {
+//        LaunchedEffect(Unit) {
+//            Log.d("WelcomeScreen", "Acknowledged button pressed, checking permissions")
+//            permissionHandle.checkAndRequestPermissions(permissionLauncher)
+////            shouldNavigateToScanDevice =
+////                permissionHandle.isLocationEnabled() && permissionHandle.bluetoothAdapter.isEnabled
+//        }
+//    }
+    // Check and request permissions when the user acknowledges
     if (acknowledgedButtonPressed) {
         LaunchedEffect(Unit) {
-            permissionHandl.checkAndRequestPermissions(permissionLauncher)
-            shouldNavigateToScanDevice =
-                permissionHandl.isLocationEnabled() && permissionHandl.bluetoothAdapter.isEnabled
+            Log.d("WelcomeScreen", "Acknowledged button pressed, checking permissions")
+            permissionHandle.checkAndRequestPermissions(permissionLauncher)
         }
     }
 
-    if (shouldNavigateToScanDevice) {
-        navController.navigate("scan_device")
+    LaunchedEffect(Unit) {
+        while (!shouldNavigateToScanDevice) {
+            // Continuously check Bluetooth and Location statuses
+            val bluetoothEnabled = permissionHandle.bluetoothAdapter.isEnabled
+            val locationEnabled = permissionHandle.isLocationEnabled()
+
+            Log.d(
+                "WelcomeScreen",
+                "Bluetooth enabled: $bluetoothEnabled, Location enabled: $locationEnabled"
+            )
+
+            if (bluetoothEnabled && locationEnabled && acknowledgedButtonPressed) {
+                // Once both are enabled, trigger navigation
+                shouldNavigateToScanDevice = true
+            }
+
+            // Wait for 1 second before checking again
+            delay(1000)
+        }
+    }
+
+
+    LaunchedEffect(shouldNavigateToScanDevice) {
+        if (shouldNavigateToScanDevice) {
+            Log.d("WelcomeScreen", "Navigating to Scan Device Screen")
+            navController.navigate("scan_device")
+        }
     }
 }
 
@@ -249,6 +291,13 @@ fun CenteredText() {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Icon(
+                painter = painterResource(id = R.drawable.fitness_tracker_24dp_ff6a00_fill1_wght400_grad0_opsz24),
+                contentDescription = "Fitness Tracker",
+                modifier = Modifier
+                    .size(100.dp)
+                    .padding(bottom = 15.dp)
+            )
             StyledText()
         }
     }

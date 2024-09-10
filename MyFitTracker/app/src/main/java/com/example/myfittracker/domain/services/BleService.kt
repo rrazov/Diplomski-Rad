@@ -482,6 +482,7 @@ class BleService : Service() {
     private val scannedDevices = MutableLiveData<List<ScanDeviceBean>>()
     private val currentDevices = mutableListOf<ScanDeviceBean>()
     private var isProcessing = false
+    private lateinit var bluetoothAdapter: BluetoothAdapter
 
     private val binder = LocalBinder()
 
@@ -496,7 +497,7 @@ class BleService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val bluetoothAdapter = (applicationContext as MyApplication).bluetoothAdapter
+        bluetoothAdapter = (applicationContext as MyApplication).bluetoothAdapter
         isEnabled = bluetoothAdapter.isEnabled
 
         val app = application as MyApplication
@@ -512,6 +513,7 @@ class BleService : Service() {
 
     fun startScan() {
         try {
+            isEnabled = bluetoothAdapter.isEnabled
             if (isEnabled) {
                 currentDevices.clear()
 
@@ -673,23 +675,23 @@ class BleService : Service() {
         })
 
         YCBTClient.healthHistoryData(Constants.DATATYPE.Health_HistoryBlood, object : BleDataResponse {
-            override fun onDataResponse(i: Int, v: Float, hashMap: HashMap<*, *>?) {
-                hashMap?.let {
-                    val lists = it["data"] as ArrayList<HashMap<*, *>>
-                    var lastBloodDBP: Int? = null
-                    var lastBloodSBP: Int? = null
+                override fun onDataResponse(i: Int, v: Float, hashMap: HashMap<*, *>?) {
+                    hashMap?.let {
+                        val lists = it["data"] as ArrayList<HashMap<*, *>>
+                        var lastBloodDBP: Int? = null
+                        var lastBloodSBP: Int? = null
 
-                    for (map in lists) {
-                        lastBloodDBP = map["bloodDBP"] as? Int
-                        lastBloodSBP = map["bloodSBP"] as? Int
-                    }
-                    Handler(Looper.getMainLooper()).post {
-                        val viewModel = ViewModelManager.getViewModel(device.deviceMac)
-                        viewModel?.updateBloodPressure(lastBloodDBP, lastBloodSBP)
+                        for (map in lists) {
+                            lastBloodDBP = map["bloodDBP"] as? Int
+                            lastBloodSBP = map["bloodSBP"] as? Int
+                        }
+                        Handler(Looper.getMainLooper()).post {
+                            val viewModel = ViewModelManager.getViewModel(device.deviceMac)
+                            viewModel?.updateBloodPressure(lastBloodDBP, lastBloodSBP)
+                        }
                     }
                 }
-            }
-        })
+            })
 
         YCBTClient.healthHistoryData(Constants.DATATYPE.Health_HistoryHeart, object : BleDataResponse {
                 override fun onDataResponse(i: Int, v: Float, hashMap: HashMap<*, *>?) {

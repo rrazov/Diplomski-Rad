@@ -24,14 +24,12 @@ fun AppNavigation(
     bleService: BleService,
     sharedDevicesScreenViewModel: SharedDevicesScreenViewModel,
     innerPadding: PaddingValues
-)
-{
-    // Get ViewModel instance
-    //val sharedViewModel: SharedDevicesScreenViewModel = viewModel()
+) {
 
     NavHost(navController = navController, startDestination = Screens.Welcome.route) {
         composable(Screens.Welcome.route) {
-            WelcomeScreen(ctx = LocalContext.current,
+            WelcomeScreen(
+                ctx = LocalContext.current,
                 navController
             )
         }
@@ -50,8 +48,6 @@ fun AppNavigation(
         }
         composable(Screens.PersonDetailsScreen.route) { backStackEntry ->
             val macAddress = backStackEntry.arguments?.getString("macAddress") ?: ""
-            //val bleService = BleService()
-            //val viewModel: PersonViewModel = viewModel(factory = PersonViewModelFactory(macAddress, "", bleService))
             PersonDetailsScreen(
                 macAddress,
                 sharedDevicesScreenViewModel,
@@ -60,15 +56,12 @@ fun AppNavigation(
         }
         composable(Screens.FitnessDashboardScreen.route) { backStackEntry ->
             val macAddress = backStackEntry.arguments?.getString("macAddress") ?: ""
-            //val bleService = BleService()
-            //val viewModel: PersonViewModel = viewModel(factory = PersonViewModelFactory(macAddress, "", bleService))
             FitnessDashboard(
                 macAddress = macAddress,
                 navController,
                 sharedDevicesScreenViewModel = sharedDevicesScreenViewModel
             )
         }
-
     }
 }
 

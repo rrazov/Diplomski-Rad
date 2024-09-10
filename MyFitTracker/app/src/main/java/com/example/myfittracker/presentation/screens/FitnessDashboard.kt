@@ -122,8 +122,8 @@ fun FitnessDashboard(
                     NavigationBarItem(
                         icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
                         label = { Text("Home") },
-                        selected = true,
-                        onClick = {}
+                        selected = false,
+                        onClick = {navController.navigate("scan_device")}
                     )
                     NavigationBarItem(
                         icon = {
@@ -137,9 +137,13 @@ fun FitnessDashboard(
                         onClick = { navController.navigate("list_of_people") }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-                        label = { Text("Settings") },
-                        selected = false,
+                        icon = { Icon(
+                                painter = painterResource(id = R.drawable.vital_signs_24dp_ff6a00_fill1_wght400_grad0_opsz24),
+                                contentDescription = "Dashboard"
+                            )
+                        },
+                        label = { Text("Dashboard") },
+                        selected = true,
                         onClick = {}
                     )
                 }

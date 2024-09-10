@@ -104,7 +104,8 @@ class MainActivity : ComponentActivity() {
                             sharedDevicesScreenViewModel = sharedDevicesScreenViewModel,
                             innerPadding = innerPadding
                         )
-                    } else{
+                        Log.i("MainActivity", "Service is bound")
+                    } else {
                         Log.i("MainActivity", "Connecting to BleService")
                     }
 

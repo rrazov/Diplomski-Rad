@@ -76,25 +76,21 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    // Di using hilt
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
-
-
     //viewModel
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-
 
     //navigation
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // Mockito for unit testing
-    testImplementation(libs.mockito.core)
-
-    // Mockito for Android instrumentation tests
-    androidTestImplementation(libs.mockito.android)
 
 
+
+
+
+
+    // Di using hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
 
 }

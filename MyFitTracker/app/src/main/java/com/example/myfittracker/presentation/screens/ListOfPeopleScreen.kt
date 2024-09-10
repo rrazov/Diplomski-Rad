@@ -103,14 +103,16 @@ fun ListOfPeopleScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Clients") },
+                title = { Text(
+                        "Clients",
+                        color = Color.White
+                    ) },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
                     containerColor = Color(0xFF007BFF) // Match the blue gradient
                 )
             )
         }
-    ) { innerPadding -> // Use innerPadding for content below app bar
-        // Gradient background
+    ) { innerPadding ->
         Box(
             modifier = modifier.fillMaxSize()
                 .background(
@@ -121,7 +123,7 @@ fun ListOfPeopleScreen(
                         )
                     )
                 )
-                .padding(innerPadding) // Apply inner padding
+                .padding(innerPadding)
         ) {
             LazyColumn(
                 modifier = Modifier

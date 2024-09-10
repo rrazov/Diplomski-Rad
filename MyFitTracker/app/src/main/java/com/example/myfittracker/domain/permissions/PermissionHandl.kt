@@ -15,7 +15,7 @@ import androidx.core.content.ContextCompat
 import com.example.myfittracker.MyApplication
 import kotlinx.coroutines.launch
 
-class PermissionHandl(private val context: Context){
+class PermissionHandle(private val context: Context) {
     val bluetoothAdapter = (context.applicationContext as MyApplication).bluetoothAdapter
     var isBluetootEnabled = bluetoothAdapter.isEnabled
 
@@ -32,7 +32,8 @@ class PermissionHandl(private val context: Context){
             Manifest.permission.BLUETOOTH_ADMIN,
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.BLUETOOTH_SCAN,
         )
     }
 
@@ -59,12 +60,16 @@ class PermissionHandl(private val context: Context){
         if (grantResults.values.all { it }) {
             enableBluetoothAndLocation()
         } else {
-            Toast.makeText(context, "Permissions required for BLE functionality", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Permissions required for BLE functionality",
+                Toast.LENGTH_SHORT
+            ).show()
             // Optionally re-request permissions or handle the case when permissions are not granted
         }
     }
 
-    private fun enableBluetoothAndLocation() {
+     fun enableBluetoothAndLocation() {
         if (!isBluetootEnabled) {
             requestEnableBluetooth()
         }
