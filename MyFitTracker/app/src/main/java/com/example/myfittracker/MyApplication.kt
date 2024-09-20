@@ -52,10 +52,6 @@ class MyApplication : Application(), ViewModelStoreOwner {
         val applicationContext = applicationContext
     }
 
-//    override fun getViewModelStore(): ViewModelStore {
-//        return viewModelStore
-//    }
-
 
     // Method to get the singleton instance of PersonViewModel
     fun provideSharedDevicesScreenViewModel(): SharedDevicesScreenViewModel {

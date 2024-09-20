@@ -108,7 +108,7 @@ class PermissionHandle(private val context: Context) {
 //            }
 //            .show()
 
-            context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+        context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
         //}
     }
 }

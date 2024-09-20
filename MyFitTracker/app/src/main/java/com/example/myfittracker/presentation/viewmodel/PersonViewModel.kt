@@ -9,9 +9,7 @@ import com.yucheng.ycbtsdk.Bean.ScanDeviceBean
 import kotlinx.coroutines.launch
 
 open class PersonViewModel(
-    val macAddress: String,
-    //val name: String,
-    //private val bleService: BleService
+    val macAddress: String
 ) : ViewModel() {
 
     var firstFetch = true;

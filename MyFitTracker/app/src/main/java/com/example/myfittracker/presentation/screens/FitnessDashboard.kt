@@ -39,14 +39,6 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-//class MainActivity : ComponentActivity() {
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        setContent {
-//            FitnessDashboard()
-//        }
-//    }
-//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +49,8 @@ fun FitnessDashboard(
 ) {
     val viewModel = ViewModelManager.getViewModel(macAddress)
     val heartRateGraphData = viewModel?.heartRateGraphData?.observeAsState(emptyList())?.value
+
+    val heathRateGraphDataMock = listOf(68, 72, 75, 83, 93, 75)
 
     val deviceName = sharedDevicesScreenViewModel
         .discoveredDevicesMap
@@ -162,74 +156,11 @@ fun FitnessDashboard(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             item {
-                FitnessGraphs(heartRateGraphData ?: emptyList(), macAddress)
+                FitnessGraphs(heartRateGraphData ?: emptyList(), macAddress)  /// emptyList()
             }
         }
     }
 }
-
-
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun FitnessDashboard(
-//    macAddress: String,
-//    sharedDevicesScreenViewModel: SharedDevicesScreenViewModel,
-//) {
-//    val viewModel = ViewModelManager.getViewModel(macAddress)
-//    val heartRateGraphData = viewModel?.heartRateGraphData?.observeAsState(emptyList())?.value
-//
-//    val deviceName = sharedDevicesScreenViewModel
-//        .discoveredDevicesMap
-//        .observeAsState().value?.get(macAddress) ?: ""
-//
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = { Text("Fitness Dashboard : $deviceName") }
-//            )
-//        },
-//        bottomBar = {
-//            NavigationBar {
-//                NavigationBarItem(
-//                    icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-//                    label = { Text("Home") },
-//                    selected = true,
-//                    onClick = {}
-//                )
-//                NavigationBarItem(
-//                    icon = { Icon(Icons.Filled.List, contentDescription = "Data") },
-//                    label = { Text("Data") },
-//                    selected = false,
-//                    onClick = {}
-//                )
-//                NavigationBarItem(
-//                    icon = { Icon(Icons.Filled.Settings, contentDescription = "Settings") },
-//                    label = { Text("Settings") },
-//                    selected = false,
-//                    onClick = {}
-//                )
-//            }
-//        }
-//    ) { innerPadding ->
-//        LazyColumn(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(innerPadding)
-//                .padding(16.dp),
-//            contentPadding = PaddingValues(bottom = 16.dp) // Optional: to add some padding at the end
-//        ) {
-//            item {
-//                FitnessParameters(macAddress)
-//                Spacer(modifier = Modifier.height(16.dp))
-//            }
-//            item {
-//                FitnessGraphs(heartRateGraphData ?: emptyList(), macAddress)
-//            }
-//        }
-//
-//    }
-//}
 
 
 @Composable
@@ -454,67 +385,6 @@ fun generateTimestamps(count: Int, startTime: String?): List<String> {
     return timestamps
 }
 
-//@Composable
-//fun HeartRateGraph(heartRateGraphData: List<Int>) {
-//    //val heartRateData = listOf(72, 75, 78, 77, 74, 73, 76, 79, 81, 78)
-//    if (heartRateGraphData.isEmpty()) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(150.dp)
-//                .background(Color.LightGray),
-//            contentAlignment = Alignment.Center
-//        ) {
-//            Text("No Heart Rate Data", color = Color.DarkGray)
-//        }
-//    } else {
-//        Canvas(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(150.dp)
-//                .background(Color.LightGray)
-//        ) {
-//            val maxY = size.height
-//            val maxX = size.width
-//            val stepX = maxX / (heartRateGraphData.size - 1)
-//            val stepY = maxY / (heartRateGraphData.maxOrNull()?.toFloat() ?: 1f)
-//
-//            val path = Path().apply {
-//                moveTo(0f, maxY - heartRateGraphData[0] * stepY)
-//                for (i in 1 until heartRateGraphData.size) {
-//                    lineTo(i * stepX, maxY - heartRateGraphData[i] * stepY)
-//                }
-//            }
-//
-//            // Draw the graph line
-//            drawPath(
-//                path = path,
-//                color = Color.Blue,
-//                style = Stroke(width = 4f)
-//            )
-//
-//            // Draw the data points and labels
-//            for (i in heartRateGraphData.indices) {
-//                val x = i * stepX
-//                val y = maxY - heartRateGraphData[i] * stepY
-//                drawCircle(
-//                    Color.Red,
-//                    radius = 5f,
-//                    center = androidx.compose.ui.geometry.Offset(x, y)
-//                )
-//                drawContext.canvas.nativeCanvas.drawText(
-//                    heartRateGraphData[i].toString(),
-//                    x,
-//                    y - 10,
-//                    android.graphics.Paint().apply {
-//                        color = android.graphics.Color.BLACK
-//                        textSize = 24f
-//                    }
-//                )
-//            }
-//        }
-//    }
-//}
 @Composable
 fun HeartRateGraph(heartRateGraphData: List<Int>, timestamps: List<String>) {
     if (heartRateGraphData.isEmpty() || timestamps.isEmpty()) {

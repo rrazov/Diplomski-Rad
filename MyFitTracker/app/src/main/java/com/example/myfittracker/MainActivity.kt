@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
 
     private val serviceConnection = object : ServiceConnection{
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-           val binder = service as BleService.LocalBinder
+            val binder = service as BleService.LocalBinder
             bleService = binder.getService()
             isServiceBound = true
         }
@@ -108,90 +108,8 @@ class MainActivity : ComponentActivity() {
                     } else {
                         Log.i("MainActivity", "Connecting to BleService")
                     }
-
-
                 }
-
-//                    val permissionHandler = PermissionHandler()
-//                    val dialogQueue = permissionHandler.visiblePermissionDialogQueue
-//
-//                    RequestEnableLocation {
-//                        Toast.makeText(this, "Location is enabled", Toast.LENGTH_SHORT).show()
-//                    }
-//
-//                    // 1. Initialize the Bluetooth enablement launcher FIRST
-//                    val enableBluetoothLauncher = rememberLauncherForActivityResult(
-//                        contract = ActivityResultContracts.StartActivityForResult()) {result: ActivityResult ->
-//                        if (result.resultCode == Activity.RESULT_OK) {
-//                            isBluetoothEnabled = true
-//                        }else{
-//                            Toast.makeText(this, "Bluetooth is not enabled. You need to enable it!!", Toast.LENGTH_SHORT).show()
-//                        }
-//                    }
-//
-//                    // 2. THEN call RequestEnableBluetooth
-//                    RequestEnableBluetooth(isBluetoothEnabled, enableBluetoothLauncher)
-//
-//                    //3. FINALLY, launch the multiple permissions request
-//                    val multiplePermissionsResultLauncher = rememberLauncherForActivityResult(
-//                        contract = ActivityResultContracts.RequestMultiplePermissions(),
-//                        onResult = { perms ->
-//                            permissionToRequest.forEach { permission ->
-//                                permissionHandler.onPermissionResult(
-//                                    permission = permission,
-//                                    isGranted = perms[permission] == true
-//                                )
-//                            }
-//                        }
-//                    )
-//                    LaunchedEffect(key1 = Unit) {
-//                        delay(100)
-//                        multiplePermissionsResultLauncher.launch(permissionToRequest)
-//                    }
-//
-//
-//
-//
-//                    Button(
-//                        onClick = {
-//                            try {
-//                                val intent = Intent(this, BleService::class.java)
-//                                this.startService(intent)
-//                                Log.i("ScanCallback", "Service is started")
-//                            }catch (e: Exception){
-//                                Log.i("ScanCallback", "Exception: $e")
-//                            }
-//
-//
-//                        },
-//                        modifier = Modifier.padding(innerPadding)) {
-//                        Text(text = "Click me")
-//
-//                    }
-//
-//                    dialogQueue
-//                        .reversed()
-//                        .forEach { permission ->
-//                            PermissionDialog(
-//                                permissionTextProvider = when (permission) {
-//                                    Manifest.permission.BLUETOOTH -> BluetoothPermissionTextProvider()
-//                                    Manifest.permission.BLUETOOTH_ADMIN -> BluetoothAdminPermissionTextProvider()
-//                                    Manifest.permission.ACCESS_FINE_LOCATION -> LocationPermissionTextProvider()
-//                                    else -> return@forEach
-//                                },
-//                                isPermanentlyDeclined = !shouldShowRequestPermissionRationale(permission),
-//                                onDismissClick = { permissionHandler.dismissDialog() }, // Call the function within the lambda
-//                                onOkClick = {
-//                                    permissionHandler.dismissDialog()
-//                                    multiplePermissionsResultLauncher.launch(arrayOf(permission))
-//                                },
-//                                onGoToSettingsClick = ::openAppSettings
-//
-//                            )
-//                        }
             }
-
-
         }
     }
 
@@ -221,8 +139,6 @@ fun RequestEnableBluetooth(
     }
 }
 
-
-// ... (Your existing code)
 
 @Composable
 fun RequestEnableLocation(onLocationEnabled: () -> Unit) {

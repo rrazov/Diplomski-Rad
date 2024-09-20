@@ -39,54 +39,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.myfittracker.presentation.viewmodel.SharedDevicesScreenViewModel
 
-//@Composable
-//fun ListOfPeopleScreen(
-//    sharedViewModel: SharedDevicesScreenViewModel,
-//    navController: NavController,
-//    modifier: Modifier = Modifier
-//) {
-//    val devicesMap by sharedViewModel
-//        .discoveredDevicesMap
-//        .observeAsState(mutableMapOf())
-//
-//    Log.d("ListOfPeopleScreen", "devicesMap: $devicesMap")
-//
-//    LazyColumn(modifier = modifier.fillMaxSize()) {
-//        items(devicesMap.entries.toList()) { entry ->
-//            PeopleListItem(
-//                name = entry.value,
-//                macAddress = entry.key,
-//                modifier = Modifier.fillMaxWidth()
-//            ) { macAddress ->
-//                //navController.navigate("person_details_screen/$macAddress")
-//                navController.navigate("fitness_dashboard_screen/$macAddress")
-//            }
-//
-//        }
-//    }
-//}
-//
-//@Composable
-//fun PeopleListItem(
-//    name: String,
-//    macAddress: String,
-//    modifier: Modifier = Modifier,
-//    onClick: (String) -> Unit
-//)
-//{
-//    Row(
-//        modifier = modifier
-//            .clickable { onClick(macAddress) }
-//            .padding(top = 20.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
-//    ){
-//        Text(
-//            text = name,
-//            fontSize = 20.sp,
-//            modifier = Modifier
-//                .padding(top = 20.dp)
-//        )
-//    }
-//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
